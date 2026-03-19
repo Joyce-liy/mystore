@@ -1,0 +1,164 @@
+/* Ajouts nécessaires pour remplacer Tailwind */
+.expanded {
+    width: 260px;
+}
+
+.collapsed {
+    width: 80px;
+}
+
+.sidebar-header {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    border-bottom: 1px solid #1e293b;
+}
+
+.nav-menu {
+  flex: 1; /* Cette ligne pousse tout ce qui est en dessous vers le bas */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  text-decoration: none;
+  color: var(--text-muted);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.sidebar-footer {
+  padding: 10px;
+  border-top: 1px solid var(--border-color); /* Optionnel : petite ligne de séparation */
+  margin-top: auto; /* Sécurité supplémentaire pour coller en bas */
+}
+
+.nav-link.active {
+    background: #2563eb;
+    color: white;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: red;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 50%;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-left: 1px solid #e2e8f0;
+    padding-left: 15px;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.header {
+    height: 64px;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    flex-shrink: 0;
+    /* ✅ SUPPRIME width: 100% si présent — pas nécessaire ici */
+    /* ✅ SUPPRIME box-sizing si présent */
+}
+
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-app);
+    width: 100%;
+    overflow: hidden;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Toute la hauteur de l'écran */
+  transition: width 0.3s ease;
+  background-color: var(--sidebar-bg);
+}
+.sidebar.expanded {
+    width: 260px;
+}
+
+.sidebar.collapsed {
+    width: 80px;
+}
+
+/* ✅ AJOUT : la zone de contenu sous le header */
+.page-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.header-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    /* Couleur sombre professionnelle */
+}
+/* Couleurs par défaut (Mode Clair) */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --header-bg: #f8f9fa;
+}
+
+/* Couleurs quand .dark-mode est appliqué au body */
+body.dark-mode {
+  --bg-color: #1a1a1a;
+  --text-color: #f5f5f5;
+  --header-bg: #2d2d2d;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Applique les variables à tes composants */
+.header {
+  background-color: var(--header-bg);
+  color: var(--text-color);
+  transition: all 0.3s ease; /* Pour un passage fluide du clair au sombre */
+}
+
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+}

@@ -1,0 +1,207 @@
+/* src/styles/sales.css */
+
+.sales-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.sales-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.btn-add {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn-add:hover { opacity: 0.9; }
+
+/* La ligne de vente transformée en carte */
+.sale-row-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 50px; /* Alignement strict */
+  gap: 1.5rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.input-group input {
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  font-size: 1rem;
+}
+
+.input-group input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-icon.delete {
+  background: #fff1f2;
+  color: #e11d48;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.sales-footer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-save {
+  background-color: #11ae7a;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* src/styles/sales.css */
+
+.sales-footer {
+  display: flex;
+  justify-content: space-between; /* Sépare l'export de la sauvegarde */
+  align-items: center;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+}
+
+.export-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-export.excel { color: #166534; }
+.btn-export.excel:hover { background: #f0fdf4; border-color: #bbf7d0; }
+
+.btn-export.pdf { color: #991b1b; }
+.btn-export.pdf:hover { background: #fef2f2; border-color: #fecaca; }
+
+.btn-save {
+  background-color: #11ae7a;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-save:hover {
+  background-color: #16a34a;
+}
+/* Style du conteneur */
+.saved-sales-container {
+  margin-top: 2rem;
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Structure du tableau */
+.sales-table {
+  width: 100%;
+  border-collapse: collapse; /* Crucial pour les lignes de délimitation */
+  margin-top: 1rem;
+}
+
+/* Bordures pour les cellules */
+.sales-table th, 
+.sales-table td {
+  border: 1px solid #e2e8f0; /* Ligne de délimitation fine et grise */
+  padding: 12px;
+  text-align: left;
+}
+
+/* Couleur de fond pour l'en-tête */
+.sales-table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Effet au survol des lignes */
+.sales-table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* Style pour la cellule profit */
+.profit-cell {
+  font-weight: bold;
+  color: #059669;
+}
+
+/* Alignement des boutons */
+.btn-icon.delete {
+  color: #ef4444;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+/* Lignes alternées (effet zébré) */
+.sales-table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}

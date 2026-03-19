@@ -1,0 +1,49 @@
+/* Le wrapper occupe toute la hauteur et largeur de l'écran */
+.login-wrapper {
+  display: flex;             /* Active le modèle Flexbox */
+  justify-content: center;   /* Centre horizontalement */
+  align-items: center;       /* Centre verticalement */
+  min-height: 100vh;         /* Force le wrapper à prendre 100% de la hauteur de vue */
+  background-color: #f8fafc; /* Couleur de fond gris clair */
+  width: 100%;
+}
+
+.login-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 400px; /* Limite la largeur sur les grands écrans */
+}
+
+/* Optionnel : pour les formulaires */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-google:hover { background: #f1f5f9; }
+.btn-google img { width: 20px; }
+
+.divider {
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}

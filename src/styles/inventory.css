@@ -1,0 +1,62 @@
+/* Conteneur principal */
+.inventory-container {
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Tableau */
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+}
+
+/* En-têtes et cellules */
+.inventory-table th, 
+.inventory-table td {
+  border: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.inventory-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+/* Effet ligne paire/impaire et survol */
+.inventory-table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* Classe d'alerte pour stock faible */
+.low-stock {
+  background-color: #fef2f2 !important; /* Fond rouge très léger */
+}
+
+.danger-text {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+/* Boutons d'action */
+.inventory-table button {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  margin-right: 5px;
+  transition: 0.2s;
+}
+
+.inventory-table button:hover {
+  background: #e2e8f0;
+}
+
+/* Image illustrant le rendu d'un tableau d'inventaire bien délimité */
