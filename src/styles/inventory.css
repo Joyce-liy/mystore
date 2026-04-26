@@ -1,62 +1,133 @@
-/* Conteneur principal */
+/* ══════════════════════════════════════
+   INVENTORY
+══════════════════════════════════════ */
+
 .inventory-container {
-  padding: 2rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  max-width: 1100px;
 }
 
-/* Tableau */
+.inventory-container h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.02em;
+  color: var(--text-heading);
+}
+
+.table-responsive {
+  overflow-x: auto;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+  background: var(--bg-card);
+}
+
 .inventory-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1.5rem;
-}
-
-/* En-têtes et cellules */
-.inventory-table th, 
-.inventory-table td {
-  border: 1px solid #e2e8f0;
-  padding: 12px 16px;
-  text-align: left;
+  min-width: 500px;
 }
 
 .inventory-table th {
-  background-color: #f8fafc;
-  color: #475569;
-  font-weight: 600;
+  background: var(--bg-subtle);
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.85rem;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 
-/* Effet ligne paire/impaire et survol */
-.inventory-table tbody tr:hover {
-  background-color: #f1f5f9;
+.inventory-table td {
+  padding: 13px 16px;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
 }
 
-/* Classe d'alerte pour stock faible */
-.low-stock {
-  background-color: #fef2f2 !important; /* Fond rouge très léger */
+.inventory-table tbody tr:last-child td { border-bottom: none; }
+
+.inventory-table tbody tr:hover td {
+  background: var(--bg-hover);
+}
+
+/* Low stock row */
+.inventory-table tbody tr.low-stock td {
+  background: var(--danger-bg);
+}
+.inventory-table tbody tr.low-stock:hover td {
+  background: rgba(239,68,68,0.1);
 }
 
 .danger-text {
-  color: #dc2626;
-  font-weight: bold;
+  color: var(--danger);
+  font-weight: 700;
 }
 
-/* Boutons d'action */
-.inventory-table button {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  padding: 4px 8px;
+.font-bold { font-weight: 700; }
+
+/* Stock action buttons */
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-stock {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
   cursor: pointer;
-  margin-right: 5px;
-  transition: 0.2s;
+  font-family: var(--font-body);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.inventory-table button:hover {
-  background: #e2e8f0;
+.btn-stock.plus {
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: rgba(16,185,129,0.25);
+}
+.btn-stock.plus:hover {
+  background: var(--success);
+  color: #fff;
+  border-color: var(--success);
 }
 
-/* Image illustrant le rendu d'un tableau d'inventaire bien délimité */
+.btn-stock.minus {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: rgba(239,68,68,0.25);
+}
+.btn-stock.minus:hover {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+.loader {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.empty-msg {
+  padding: 2.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 600px) {
+  .inventory-container { padding: 1rem; }
+  .inventory-container h2 { font-size: 1.1rem; }
+}

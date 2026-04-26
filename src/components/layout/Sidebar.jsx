@@ -8,7 +8,7 @@ import {
   Settings, 
   ChevronLeft, 
   ChevronRight,
-  HelpCircle // Import de l'icône Help
+  HelpCircle
 } from 'lucide-react';
 import '../../styles/layout.css';
 
@@ -16,11 +16,11 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
   const location = useLocation();
 
   const menuItems = [
-    { icon: <LayoutDashboard size={20} />, label: "Tableau de bord", path: "/" },
-    { icon: <ShoppingCart size={20} />, label: "Ventes", path: "/sales" },
-    { icon: <Package size={20} />, label: "Inventaire", path: "/inventory" },
-    { icon: <Users size={20} />, label: "Clients", path: "/customers" },
-    { icon: <Settings size={20} />, label: "Paramètres", path: "/settings" },
+    { icon: <LayoutDashboard size={18} />, label: "Tableau de bord", path: "/" },
+    { icon: <ShoppingCart size={18} />, label: "Ventes", path: "/sales" },
+    { icon: <Package size={18} />, label: "Inventaire", path: "/inventory" },
+   // { icon: <Users size={18} />, label: "Clients", path: "/customers" },
+   // { icon: <Settings size={18} />, label: "Paramètres", path: "/settings" },
   ];
 
   return (
@@ -28,17 +28,17 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
       <div className="sidebar-header">
         {isExpanded && <span className="logo-text">MYSTORE</span>}
         <button onClick={() => setIsExpanded(!isExpanded)} className="toggle-btn">
-          {isExpanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+          {isExpanded ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>
       </div>
 
-      {/* Menu principal */}
       <nav className="nav-menu">
         {menuItems.map((item) => (
-          <Link 
-            key={item.path} 
-            to={item.path} 
+          <Link
+            key={item.path}
+            to={item.path}
             className={location.pathname === item.path ? 'nav-link active' : 'nav-link'}
+            title={!isExpanded ? item.label : undefined}
           >
             {item.icon}
             {isExpanded && <span>{item.label}</span>}
@@ -46,13 +46,13 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
         ))}
       </nav>
 
-      {/* Section Bas de page (Footer) */}
       <div className="sidebar-footer">
-        <Link 
-          to="/help" 
+        <Link
+          to="/help"
           className={location.pathname === "/help" ? 'nav-link active' : 'nav-link'}
+          title={!isExpanded ? "Aide & Support" : undefined}
         >
-          <HelpCircle size={20} />
+          <HelpCircle size={18} />
           {isExpanded && <span>Aide & Support</span>}
         </Link>
       </div>

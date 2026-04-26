@@ -1,87 +1,137 @@
+/* ══════════════════════════════════════
+   HELP
+══════════════════════════════════════ */
+
 .help-page-container {
-  padding: 30px;
-  max-width: 800px;
+  padding: 2rem 1.5rem;
+  max-width: 720px;
   margin: 0 auto;
 }
 
 .help-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 2.5rem;
+}
+
+.help-header svg {
+  color: var(--brand);
+  margin-bottom: 1rem;
 }
 
 .help-header h1 {
-  margin: 15px 0 5px;
-  color: var(--text-main);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 0.5rem;
 }
 
 .help-header p {
   color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 .help-content {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
 }
 
 .help-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.help-card:hover {
+  border-color: rgba(59,110,248,0.3);
+}
+
+.help-card.active {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(59,110,248,0.08);
 }
 
 .help-card-header {
-  padding: 18px;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  font-weight: 600;
-  color: var(--text-main);
+  user-select: none;
+  transition: background 0.15s;
 }
+
+.help-card-header:hover { background: var(--bg-hover); }
 
 .title-wrapper {
   display: flex;
   align-items: center;
   gap: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-heading);
 }
 
-.title-wrapper svg {
-  color: var(--accent-color);
-}
+.title-wrapper svg { color: var(--brand); flex-shrink: 0; }
+
+.help-card-header > svg:last-child { color: var(--text-muted); flex-shrink: 0; }
 
 .help-card-body {
-  padding: 0 18px 18px 50px;
-  color: var(--text-muted);
-  line-height: 1.6;
-  font-size: 0.95rem;
+  padding: 0 20px 18px 48px;
+  border-top: 1px solid var(--border);
 }
 
+.help-card-body p {
+  color: var(--text-muted);
+  line-height: 1.65;
+  font-size: 0.875rem;
+  padding-top: 14px;
+}
+
+/* Support contact section */
 .support-contact {
-  margin-top: 50px;
+  margin-top: 2.5rem;
   text-align: center;
-  padding: 30px;
-  background-color: var(--bg-card);
-  border-radius: 12px;
-  border: 2px dashed var(--border-color);
+  padding: 2rem;
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  border: 2px dashed var(--border);
+}
+
+.support-contact h3 {
+  font-size: 1rem;
+  color: var(--text-heading);
+  margin-bottom: 0.4rem;
+}
+
+.support-contact p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
 }
 
 .whatsapp-link {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 15px;
-  background-color: #25d366;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 50px;
+  gap: 8px;
+  background: #25d366;
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 99px;
   text-decoration: none;
-  font-weight: bold;
-  transition: transform 0.2s;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 10px rgba(37,211,102,0.3);
+}
+.whatsapp-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(37,211,102,0.4);
 }
 
-.whatsapp-link:hover {
-  transform: scale(1.05);
+@media (max-width: 600px) {
+  .help-page-container { padding: 1.25rem 1rem; }
+  .help-card-body { padding-left: 20px; }
 }

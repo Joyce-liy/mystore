@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  HelpCircle, 
-  ShoppingCart, 
-  Package, 
-  Download, 
-  Moon, 
-  MessageCircle,
+import {
+  HelpCircle,
+  ShoppingCart,
+  Package,
+  Download,
+  Moon,
   ChevronDown,
-  ChevronUp 
+  ChevronUp
 } from 'lucide-react';
-import '../styles/help.css'; // On utilise les variables globales
+import '../styles/help.css';
 
 const Help = () => {
   const [openSection, setOpenSection] = useState(null);
@@ -21,25 +20,25 @@ const Help = () => {
   const helpData = [
     {
       id: 1,
-      icon: <ShoppingCart size={20} />,
+      icon: <ShoppingCart size={18} />,
       title: "Gestion des Ventes",
       content: "Pour enregistrer une vente, allez dans l'onglet 'Ventes'. Si vous êtes Admin, vous pouvez créer un nouvel article. Si vous êtes Vendeur, vous devez modifier un article existant 'En attente' pour y ajouter le prix de vente final."
     },
     {
       id: 2,
-      icon: <Package size={20} />,
+      icon: <Package size={18} />,
       title: "Suivi de l'Inventaire",
       content: "L'inventaire affiche vos produits, leur prix d'achat et le stock actuel. Utilisez les boutons (+) et (-) pour ajuster les quantités. Une icône orange apparaît quand le stock est inférieur à 5 unités."
     },
     {
       id: 3,
-      icon: <Download size={20} />,
+      icon: <Download size={18} />,
       title: "Exports Excel et PDF",
       content: "En bas de la page des Ventes, vous trouverez deux boutons. 'Excel' génère un tableur complet, tandis que 'PDF' crée un rapport visuel propre pour l'impression."
     },
     {
       id: 4,
-      icon: <Moon size={20} />,
+      icon: <Moon size={18} />,
       title: "Mode Sombre / Clair",
       content: "Vous pouvez changer l'apparence du site en cliquant sur l'icône Soleil/Lune dans la barre en haut à droite. Votre choix est sauvegardé automatiquement."
     }
@@ -48,7 +47,7 @@ const Help = () => {
   return (
     <div className="help-page-container">
       <div className="help-header">
-        <HelpCircle size={40} color="#4a90e2" />
+        <HelpCircle size={40} />
         <h1>Centre d'Aide & Support</h1>
         <p>Bienvenue sur votre assistant MyStore. Trouvez ici les réponses à vos questions.</p>
       </div>
@@ -61,7 +60,7 @@ const Help = () => {
                 {item.icon}
                 <span>{item.title}</span>
               </div>
-              {openSection === item.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              {openSection === item.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </div>
             {openSection === item.id && (
               <div className="help-card-body">
@@ -71,7 +70,6 @@ const Help = () => {
           </div>
         ))}
       </div>
-
     </div>
   );
 };

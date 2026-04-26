@@ -10,28 +10,22 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Dashboard = () => {
   const [totalTransport, setTotalTransport] = useState(0);
-  const [transportData, setTransportData] = useState([0, 0]); // [Ville, Drone]
+  const [transportData, setTransportData] = useState([0, 0]);
   const [weeklySales, setWeeklySales] = useState([]);
   const [droneStats, setDroneStats] = useState({ count: 0, savings: 0 });
 
   useEffect(() => {
-    // 1. Écouter les ventes dans Firestore
     const q = query(collection(db, "sales"));
-    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const allSales = snapshot.docs.map(doc => doc.data());
 
-      // --- CALCULS DES COÛTS DE TRANSPORT ---
-      // Note : On suppose ici que tu as un champ 'typeTransport' (Ville/Drone) 
-      // Si tu n'as que le montant, on peut simuler une répartition
       let villeTotal = 0;
       let droneTotal = 0;
       let droneCount = 0;
 
       allSales.forEach(sale => {
         const cost = Number(sale.transport) || 0;
-        // Logique : Si le coût est bas (ex: < 500), on considère que c'est un Drone
-        if (cost <= 450) { 
+        if (cost <= 450) {
           droneTotal += cost;
           droneCount++;
         } else {
@@ -41,24 +35,23 @@ const Dashboard = () => {
 
       setTotalTransport(villeTotal + droneTotal);
       setTransportData([villeTotal, droneTotal]);
-      setDroneStats({ count: droneCount, savings: 75 }); // Exemple fixe pour l'impact
+      setDroneStats({ count: droneCount, savings: 75 });
 
-      // --- CALCULS POUR LE GRAPH DE PERFORMANCE (BarPlot) ---
-      // On groupe les ventes par jour (Lun, Mar, etc.)
-      const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+      const dayNames = { mon: 'Lun', tue: 'Mar', wed: 'Mer', thu: 'Jeu', fri: 'Ven', sat: 'Sam', sun: 'Dim' };
+      const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
       const groupedSales = {};
 
       allSales.forEach(sale => {
         if (sale.createdAt) {
-          const date = sale.createdAt.toDate();
-          const dayName = days[date.getDay()];
-          groupedSales[dayName] = (groupedSales[dayName] || 0) + Number(sale.prixVente);
+          const date = sale.createdAt.toDate ? sale.createdAt.toDate() : new Date(sale.createdAt);
+          const dayKey = dayKeys[date.getDay()];
+          groupedSales[dayKey] = (groupedSales[dayKey] || 0) + (Number(sale.prixVente) || 0);
         }
       });
 
-      const formattedSales = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'].map(day => ({
-        name: day,
-        vente: groupedSales[day] || 0
+      const formattedSales = ['mon', 'tue', 'wed', 'thu', 'fri'].map(key => ({
+        name: dayNames[key],
+        vente: groupedSales[key] || 0
       }));
 
       setWeeklySales(formattedSales);
@@ -67,53 +60,58 @@ const Dashboard = () => {
     return () => unsubscribe();
   }, []);
 
-  // Configuration dynamique du Doughnut
   const transportCircleData = {
-    labels: ['Livraison Ville (Moto)', 'Livraison Drone'],
+    labels: ['Transport Ville', 'Transport Drone'],
     datasets: [
       {
         data: transportData,
-        backgroundColor: ['#3b82f6', '#10b981'],
-        hoverBackgroundColor: ['#2563eb', '#059669'],
+        backgroundColor: ['#3b6ef8', '#10b981'],
+        hoverBackgroundColor: ['#2550d4', '#059669'],
         borderWidth: 0,
-        cutout: '70%',
+        cutout: '72%',
       },
     ],
   };
 
+  const doughnutOptions = {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: { size: 12, family: "'DM Sans', sans-serif" },
+          color: 'var(--text-muted)',
+        }
+      }
+    }
+  };
+
   return (
     <div className="dashboard-container">
-      {/* 1. Ventes Dynamiques */}
-      <div className="card full-width shadow-sm">
-        <h2 className="card-title">Performance des Ventes (Réel)</h2>
+
+      {/* Performance des Ventes */}
+      <div className="card full-width">
+        <h2 className="card-title">Performance des Ventes</h2>
         <BarPlot data={weeklySales.length > 0 ? weeklySales : []} />
       </div>
 
-      {/* 2. Le Cercle de Transport Dynamique */}
-      <div className="card shadow-sm">
-        <h2 className="card-title">Répartition des Coûts Logistiques</h2>
-        <div style={{ height: '280px', position: 'relative' }}>
-          <Doughnut 
-            data={transportCircleData} 
-            options={{ 
-              maintainAspectRatio: false,
-              plugins: { 
-                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } 
-              }
-            }} 
-          />
+      {/* Répartition Logistique */}
+      <div className="card">
+        <h2 className="card-title">Répartition Logistique</h2>
+        <div style={{ height: '260px', position: 'relative' }}>
+          <Doughnut data={transportCircleData} options={doughnutOptions} />
           <div className="chart-center-text">
-            <span className="total-label">Total F</span>
-            <span className="total-value" style={{ fontSize: '18px' }}>
-              {totalTransport.toLocaleString()}
-            </span>
+            <span className="total-label">Total</span>
+            <span className="total-value">{totalTransport.toLocaleString()} F</span>
           </div>
         </div>
       </div>
 
-      {/* 3. Carte Impact Drone */}
-      <div className="card highlight-card shadow-sm">
-        <h2 className="card-title" style={{ color: 'white' }}>Statistiques Drone</h2>
+      {/* Statistiques Drones */}
+      <div className="card highlight-card">
+        <h2 className="card-title">Statistiques Drones</h2>
         <div className="impact-content">
           <div className="impact-main">
             <span className="impact-value">-{droneStats.savings}%</span>
@@ -121,20 +119,21 @@ const Dashboard = () => {
           </div>
           <div className="impact-details">
             <div className="detail-item">
-              <span>Livraisons Drone :</span>
+              <span>Livraisons par drone</span>
               <strong>{droneStats.count}</strong>
             </div>
             <div className="detail-item">
-              <span>Coût Moyen Ville :</span>
-              <strong>2,500 F</strong>
+              <span>Coût moyen Ville</span>
+              <strong>2 500 F</strong>
             </div>
             <div className="detail-item">
-              <span>Coût Moyen Drone :</span>
+              <span>Coût moyen Drone</span>
               <strong>450 F</strong>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 };
