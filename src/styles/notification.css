@@ -1,0 +1,158 @@
+/* ══════════════════════════════════════
+   NOTIFICATIONS DROPDOWN
+══════════════════════════════════════ */
+
+/* ── Conteneur relatif autour du bouton ── */
+.notification-container {
+  position: relative;
+}
+
+/* ── Dropdown panel ── */
+.notif-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 340px;
+  max-height: 420px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 200;
+  animation: notifSlideIn 0.15s ease;
+}
+
+@keyframes notifSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header du dropdown ── */
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.notif-header h3 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: -0.01em;
+}
+
+/* ── Liste des notifications ── */
+.notif-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ── Message vide ── */
+.notif-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── Item individuel ── */
+.notif-item {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+  cursor: default;
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item:hover {
+  background: var(--bg-hover);
+}
+
+/* Non lu : barre bleue à gauche + fond légèrement teinté */
+.notif-item.unread {
+  background: var(--brand-light);
+  border-left: 3px solid var(--brand);
+  padding-left: 13px; /* compense la bordure */
+}
+
+.notif-item.unread:hover {
+  background: rgba(59, 110, 248, 0.12);
+}
+
+/* Lu : normal */
+.notif-item.read {
+  opacity: 0.75;
+}
+
+/* ── Contenu texte ── */
+.notif-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-msg-title {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notif-msg-body {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0 0 5px;
+  line-height: 1.4;
+  /* 2 lignes max */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notif-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* ── Badge (sur le bouton cloche) ── */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-card);
+  padding: 0 3px;
+  pointer-events: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .notif-dropdown {
+    width: calc(100vw - 2rem);
+    right: -1rem;
+  }
+}

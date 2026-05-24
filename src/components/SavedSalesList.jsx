@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Trash2, Edit3, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const SavedSalesList = ({ savedSales, onDelete, onEdit }) => {
+  const { t } = useTranslation();
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   // Fonction interne pour formater les anciennes dates si dateFormatee n'existe pas encore
@@ -16,22 +18,22 @@ const SavedSalesList = ({ savedSales, onDelete, onEdit }) => {
 
   return (
     <div className="saved-sales-container">
-      <h3>Tableau des Ventes Enregistrées</h3>
+      <h3>{t('saved_sales_title')}</h3>
       <div className="table-responsive">
         <table className="sales-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Photo</th>
-              <th>Article</th>
-              <th>Marque</th>
-              <th>Taille</th>
-              <th>Achat</th>
-              <th>Vente</th>
-              <th>Transport</th>
-              <th>Profit</th>
-              <th>Statut</th>
-              <th>Actions</th>
+              <th>{t('sales_col_date')}</th>
+              <th>{t('sales_photo')}</th>
+              <th>{t('sales_col_item')}</th>
+              <th>{t('sales_brand')}</th>
+              <th>{t('sales_size')}</th>
+              <th>{t('sales_buy_price')}</th>
+              <th>{t('sales_sell_price')}</th>
+              <th>{t('sales_transport')}</th>
+              <th>{t('sales_profit')}</th>
+              <th>{t('saved_sales_status')}</th>
+              <th>{t('saved_sales_actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -46,13 +48,13 @@ const SavedSalesList = ({ savedSales, onDelete, onEdit }) => {
                   {sale.photo ? (
                     <img
                       src={sale.photo}
-                      alt="Article"
+                      alt={t('sales_photo')}
                       className="product-thumbnail clickable"
                       onClick={() => setSelectedPhoto(sale.photo)}
                       style={{ cursor: 'pointer' }}
                     />
                   ) : (
-                    <div className="photo-placeholder">Pas de photo</div>
+                    <div className="photo-placeholder">{t('saved_sales_no_photo')}</div>
                   )}
                 </td>
                 <td>{sale.designation}</td>
@@ -66,7 +68,9 @@ const SavedSalesList = ({ savedSales, onDelete, onEdit }) => {
                 </td>
                 <td>
                   <span className={`badge ${sale.status || 'en_attente'}`}>
-                    {sale.status === 'termine' ? 'Vendu' : 'À vendre'}
+                    {sale.status === 'termine'
+                      ? t('saved_sales_status_sold')
+                      : t('saved_sales_status_pending')}
                   </span>
                 </td>
                 <td className="actions-cell">
@@ -81,7 +85,7 @@ const SavedSalesList = ({ savedSales, onDelete, onEdit }) => {
                       padding: '5px',
                       marginRight: '10px'
                     }}
-                    title="Saisir le prix de vente"
+                    title={t('saved_sales_action_edit')}
                   >
                     <Edit3 size={18} />
                   </button>
@@ -94,9 +98,9 @@ const SavedSalesList = ({ savedSales, onDelete, onEdit }) => {
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      padding: '5px'
+                      padding: '19px'
                     }}
-                    title="Supprimer"
+                    title={t('saved_sales_action_delete')}
                   >
                     <Trash2 size={18} />
                   </button>

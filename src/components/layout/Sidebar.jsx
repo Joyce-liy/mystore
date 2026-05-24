@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'; // 1. Importer le hook
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -8,19 +9,21 @@ import {
   Settings, 
   ChevronLeft, 
   ChevronRight,
-  HelpCircle
+  HelpCircle,
+  BarChart3
 } from 'lucide-react';
 import '../../styles/layout.css';
 
 const Sidebar = ({ isExpanded, setIsExpanded }) => {
   const location = useLocation();
+  const { t } = useTranslation(); // 2. Initialiser la fonction de traduction
 
   const menuItems = [
-    { icon: <LayoutDashboard size={18} />, label: "Tableau de bord", path: "/" },
-    { icon: <ShoppingCart size={18} />, label: "Ventes", path: "/sales" },
-    { icon: <Package size={18} />, label: "Inventaire", path: "/inventory" },
-   // { icon: <Users size={18} />, label: "Clients", path: "/customers" },
-   // { icon: <Settings size={18} />, label: "Paramètres", path: "/settings" },
+    // 3. Utiliser t('clé') pour les labels
+    { icon: <LayoutDashboard size={18} />, label: t('sidebar_dashboard'), path: "/" },
+    { icon: <BarChart3 size={18} />, label: t('sidebar_stats'), path: "/statistics" },
+    { icon: <ShoppingCart size={18} />, label: t('sidebar_sales'), path: "/sales" },
+    { icon: <Package size={18} />, label: t('sidebar_inventory'), path: "/inventory" },
   ];
 
   return (
@@ -50,10 +53,11 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
         <Link
           to="/help"
           className={location.pathname === "/help" ? 'nav-link active' : 'nav-link'}
-          title={!isExpanded ? "Aide & Support" : undefined}
+          // 4. Traduire aussi le texte d'aide
+          title={!isExpanded ? t('sidebar_help') : undefined}
         >
           <HelpCircle size={18} />
-          {isExpanded && <span>Aide & Support</span>}
+          {isExpanded && <span>{t('sidebar_help')}</span>}
         </Link>
       </div>
     </aside>

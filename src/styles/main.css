@@ -1,0 +1,129 @@
+/* ══════════════════════════════════════
+   MAIN — Variables CSS globales & Base
+   MyStore App
+══════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+/* ══ LIGHT THEME (défaut) ══ */
+:root {
+  /* ── Brand ── */
+  --brand:          #3b6ef8;
+  --brand-dark:     #2550d4;
+  --brand-light:    rgba(59, 110, 248, 0.10);
+
+  /* ── Backgrounds ── */
+  --bg-app:         #f0f2f7;
+  --bg-card:        #ffffff;
+  --bg-subtle:      #f5f7fb;
+  --bg-hover:       #eef1f8;
+
+  /* ── Sidebar (toujours sombre) ── */
+  --sidebar-bg:           #0d1526;
+  --sidebar-text:         rgba(255, 255, 255, 0.50);
+  --sidebar-text-active:  #ffffff;
+  --sidebar-item:         rgba(255, 255, 255, 0.07);
+  --sidebar-active:       #3b6ef8;
+  --sidebar-border:       rgba(255, 255, 255, 0.06);
+
+  /* ── Textes ── */
+  --text-heading:   #0f172a;
+  --text-main:      #1e293b;
+  --text-muted:     #64748b;
+
+  /* ── Bordures ── */
+  --border:         #e2e8f0;
+
+  /* ── Statuts ── */
+  --success:        #10b981;
+  --success-bg:     rgba(16, 185, 129, 0.09);
+  --danger:         #ef4444;
+  --danger-bg:      rgba(239, 68, 68, 0.09);
+  --warning:        #f59e0b;
+  --warning-bg:     rgba(245, 158, 11, 0.09);
+
+  /* ── Ombres ── */
+  --shadow-xs:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm:  0 4px 14px rgba(0,0,0,0.08);
+  --shadow-md:  0 8px 30px rgba(0,0,0,0.12);
+
+  /* ── Rayons ── */
+  --r-xs:   4px;
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   14px;
+  --r-xl:   20px;
+  --r-2xl:  28px;
+
+  /* ── Polices ── */
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-display: 'Syne', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+}
+
+/* ══ DARK THEME ══ */
+[data-theme="dark"] {
+  --bg-app:         #060d1c;
+  --bg-card:        #0d1829;
+  --bg-subtle:      #101e30;
+  --bg-hover:       #162236;
+
+  --text-heading:   #f1f5f9;
+  --text-main:      #cbd5e1;
+  --text-muted:     #64748b;
+
+  --border:         rgba(255, 255, 255, 0.07);
+
+  --shadow-xs:  0 1px 3px rgba(0,0,0,0.35);
+  --shadow-sm:  0 4px 14px rgba(0,0,0,0.45);
+  --shadow-md:  0 8px 30px rgba(0,0,0,0.55);
+}
+
+/* ══ RESET ══ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-heading);
+  line-height: 1.2;
+}
+
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button { font-family: var(--font-body); }
+img { max-width: 100%; display: block; }
+
+/* ══ SCROLLBAR ══ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.28);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.50); }
+
+/* ══ UTILITAIRE ══ */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
+}
