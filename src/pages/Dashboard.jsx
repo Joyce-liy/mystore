@@ -7,6 +7,7 @@ import {
   ShoppingCart, Package, BarChart2, FileDown,
   TrendingUp, TrendingDown, Plus, ArrowRight
 } from 'lucide-react';
+import PacketsGrid from '../components/PacketsGrid';
 import '../styles/dashboard.css';
 
 /* ── Circular progress SVG ── */
@@ -152,6 +153,9 @@ const Dashboard = () => {
         </div>
 
       </div>
+
+      {/* ── Packets ── */}
+      <PacketsGrid />
     </div>
   );
 };

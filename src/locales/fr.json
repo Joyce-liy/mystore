@@ -145,12 +145,27 @@
   "notif_stock_low_title": "Stock faible",
   "notif_stock_low_body": "L'article \"{name}\" a un stock faible ({stock} unités).",
 
-
-  
   "sidebar_dashboard": "Tableau de bord",
   "sidebar_stats": "Statistiques",
   "sidebar_sales": "Ventes",
   "sidebar_inventory": "Inventaire",
-  "sidebar_help": "Aide & Support"
+  "sidebar_help": "Aide & Support",
+  "packets_title": "Gestion des Paquets",
+  "packets_subtitle": "Suivi des paquets et gestion des articles orphelins",
+  "packets_loading": "Chargement des paquets…",
+  "packets_new": "Nouveau Paquet",
+  "packets_create": "Créer un Paquet",
+  "packets_empty": "Aucun paquet disponible",
+  "packets_card_articles": "{count} articles",
+  "packets_orphan_banner": "{count} paquets orphelins",
+  "packets_orphan_banner_assign": "{count} paquets orphelins disponibles pour être assignés à {name}",
+  "packets_assign_to": "Assigner à {name}",
+  "packets_field_name": "Nom du Paquet",
+  "packets_field_date": "Date du Paquet",
+  "packets_no_orphans": "Aucun paquet orphelin disponible",
+  "packets_assign_button": "Assigner le Paquet",
+  "packets_global_view": "Vue Globale",
+  "packets_global_view_sub": "Voir tous les paquets",
+  "packets_switcher_search": "Rechercher des Paquets"
 
 }

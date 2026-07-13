@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Sun, Moon, UserCircle, Globe } from 'lucide-react';
+import { Bell, Sun, Moon, UserCircle, Globe, Layers } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { usePacket } from '../../contexts/PacketContext';
 import { useTranslation } from 'react-i18next';
 import { db, auth } from '../../firebase/firebaseConfig';
 import {
@@ -9,6 +10,7 @@ import {
   onSnapshot, getDoc, doc, writeBatch
 } from 'firebase/firestore';
 import NotificationDropdown from '../NotificationDropdown';
+import PacketSwitcherModal from '../PacketSwitcherModal';
 import '../../styles/layout.css';
 
 const Header = () => {
@@ -16,7 +18,9 @@ const Header = () => {
   const location                = useLocation();
   const navigate                = useNavigate();
   const { isDark, toggleTheme } = useTheme();
+  const { currentPacket }       = usePacket();
 
+  const [showSwitcher,  setShowSwitcher]  = useState(false);
   const [showNotifs,    setShowNotifs]    = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount,   setUnreadCount]   = useState(0);
@@ -122,6 +126,10 @@ const Header = () => {
     <header className="header">
       <div className="header-title">{title}</div>
       <div className="header-actions">
+        <button className="packet-switch-pill" onClick={() => setShowSwitcher(true)}>
+          <Layers size={14} />
+          <span>{currentPacket ? currentPacket.nom : t('packets_global_view')}</span>
+        </button>
         <div className="lang-wrapper">
           <button className="lang-select-btn" onClick={toggleLanguage}>
             <Globe size={14} className="icon-globe" />
@@ -151,6 +159,8 @@ const Header = () => {
           <UserCircle size={28} strokeWidth={1.5} />
         </div>
       </div>
+
+      {showSwitcher && <PacketSwitcherModal onClose={() => setShowSwitcher(false)} />}
     </header>
   );
 };

@@ -2,22 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Minus, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { db } from '../firebase/firebaseConfig';
-import { collection, onSnapshot, doc, updateDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, query, orderBy, where, serverTimestamp } from 'firebase/firestore';
+import { usePacket } from '../contexts/PacketContext';
 import '../styles/inventory.css';
 
 const Inventory = () => {
   const { t } = useTranslation();
+  const { currentPacket } = usePacket();
+  const packetId = currentPacket?.id || null;
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading]     = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'sales'), orderBy('designation', 'asc'));
+    const q = packetId
+      ? query(collection(db, 'sales'), where('packetId', '==', packetId))
+      : query(collection(db, 'sales'), orderBy('designation', 'asc'));
     const unsubscribe = onSnapshot(q, (snap) => {
-      setInventory(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      let list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (packetId) list.sort((a, b) => (a.designation || '').localeCompare(b.designation || ''));
+      setInventory(list);
       setLoading(false);
     }, (error) => { console.error('Erreur Firestore:', error); setLoading(false); });
     return () => unsubscribe();
-  }, []);
+  }, [packetId]);
 
   const handleUpdateStock = async (id, currentStock, amount) => {
     const newStock = Math.max(0, (Number(currentStock)||0) + amount);

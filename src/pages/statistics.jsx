@@ -3,13 +3,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, ShoppingBag, Package, DollarSign, BarChart2 } from 'lucide-react';
 import { db } from '../firebase/firebaseConfig';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 
 // ── Composants de charts ──
 import SalesEvolutionChart  from '../components/charts/SalesEvolutionChart';
 import TopArticlesChart     from '../components/charts/TopArticlesChart';
 import StockDistributionChart from '../components/charts/StockDistributionChart';
 import ProfitExpensesChart  from '../components/charts/ProfitExpensesChart';
+import { usePacket } from '../contexts/PacketContext';
 
 import '../styles/statistics.css';
 
@@ -55,18 +56,30 @@ const ChartCard = ({ title, subtitle, badge, children, className = '' }) => (
 ══════════════════════════════════════ */
 const Statistics = () => {
   const { t } = useTranslation();
+  const { currentPacket } = usePacket();
+  const packetId = currentPacket?.id || null;
   const [allSales,   setAllSales]   = useState([]);
   const [loading,    setLoading]    = useState(true);
 
   // ── Fetch Firestore ──
   useEffect(() => {
-    const q = query(collection(db, 'sales'), orderBy('createdAt', 'asc'));
+    const q = packetId
+      ? query(collection(db, 'sales'), where('packetId', '==', packetId))
+      : query(collection(db, 'sales'), orderBy('createdAt', 'asc'));
     const unsub = onSnapshot(q, (snap) => {
-      setAllSales(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      let list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (packetId) {
+        list.sort((a, b) => {
+          const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+          const dbt = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+          return da - dbt;
+        });
+      }
+      setAllSales(list);
       setLoading(false);
     }, () => setLoading(false));
     return () => unsub();
-  }, []);
+  }, [packetId]);
 
   // ── KPIs globaux ──
   const kpis = useMemo(() => {

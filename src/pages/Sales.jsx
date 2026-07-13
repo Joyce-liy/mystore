@@ -7,11 +7,12 @@ import ExcelJS from 'exceljs';
 import imageCompression from 'browser-image-compression';
 import { db, auth } from '../firebase/firebaseConfig';
 import {
-  collection, addDoc, onSnapshot, query, orderBy,
+  collection, addDoc, onSnapshot, query, orderBy, where,
   deleteDoc, doc, getDoc, updateDoc, serverTimestamp
 } from 'firebase/firestore';
 import SavedSalesList from '../components/SavedSalesList';
 import { sendAppNotification } from '../utils/notifications';
+import { usePacket } from '../contexts/PacketContext';
 import '../styles/sales.css';
 
 const formatDate = (date) => {
@@ -32,9 +33,9 @@ const filterByPeriod = (sales, period) => {
   });
 };
 
-const emptyRow = () => ({
+const emptyRow = (packetId = null) => ({
   id: Date.now(), designation: '', prixAchat: '', prixVente: '',
-  transport: '', marque: '', taille: '', photo: null, isUpdate: false
+  transport: '', marque: '', taille: '', photo: null, isUpdate: false, packetId
 });
 
 const downloadBlob = (blob, filename) => {
@@ -50,7 +51,9 @@ const downloadBlob = (blob, filename) => {
 
 const Sales = () => {
   const { t, i18n } = useTranslation();
-  const [sales, setSales]               = useState([emptyRow()]);
+  const { currentPacket } = usePacket();
+  const packetId = currentPacket?.id || null;
+  const [sales, setSales]               = useState([emptyRow(packetId)]);
   const [savedSales, setSavedSales]     = useState([]);
   const [userRole, setUserRole]         = useState('vendeur');
   const [loading, setLoading]           = useState(false);
@@ -65,17 +68,31 @@ const Sales = () => {
       }
     };
     fetchRole();
-    const q = query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
+    const q = packetId
+      ? query(collection(db, 'sales'), where('packetId', '==', packetId))
+      : query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, snap => {
-      setSavedSales(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      let list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (packetId) {
+        list.sort((a, b) => {
+          const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+          const dbt = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+          return dbt - da;
+        });
+      }
+      setSavedSales(list);
     }, (error) => {
       console.error('Sales snapshot error:', error);
     });
     return () => unsubscribe();
-  }, []);
+  }, [packetId]);
 
   const handleInputChange = (id, field, value) =>
     setSales(sales.map(s => s.id === id ? { ...s, [field]: value } : s));
+
+  useEffect(() => {
+    setSales([emptyRow(packetId)]);
+  }, [packetId]);
 
   const handlePhotoChange = async (id, file) => {
     if (!file) return;
@@ -87,7 +104,7 @@ const Sales = () => {
     } catch (err) { console.error('Erreur compression photo:', err); }
   };
 
-  const addSection    = () => { if (userRole === 'admin') setSales([...sales, emptyRow()]); };
+  const addSection    = () => { if (userRole === 'admin') setSales([...sales, emptyRow(packetId)]); };
   const removeSection = id => { if (sales.length > 1) setSales(sales.filter(s => s.id !== id)); };
 
   const handleEditRequest = sale => {
@@ -150,6 +167,7 @@ const Sales = () => {
             marque: s.marque || '', taille: s.taille || '', photo: s.photo || null,
             status: v > 0 ? 'termine' : 'en_attente',
             vendeurId: auth.currentUser.uid,
+            packetId: s.packetId ?? packetId ?? null,
             createdAt: serverTimestamp(), dateFormatee: formatDate()
           });
 
@@ -173,7 +191,7 @@ const Sales = () => {
         }
       }
 
-      setSales([emptyRow()]);
+      setSales([emptyRow(packetId)]);
       alert(t('sales_saved_ok'));
     } catch (err) {
       console.error(err);
@@ -334,7 +352,7 @@ const Sales = () => {
 
                 {sale.isUpdate && (
                   <div className="ms-card-foot">
-                    <button className="ms-btn-ghost" onClick={() => setSales([emptyRow()])}>
+                    <button className="ms-btn-ghost" onClick={() => setSales([emptyRow(packetId)])}>
                       {t('sales_cancel')}
                     </button>
                   </div>
