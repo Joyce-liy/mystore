@@ -1,5 +1,6 @@
 // src/components/charts/SalesEvolutionChart.jsx
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, Area, AreaChart
@@ -40,6 +41,7 @@ const CustomLegend = ({ payload }) => (
 );
 
 const SalesEvolutionChart = ({ data = [] }) => {
+  const { t } = useTranslation();
   return (
     <ResponsiveContainer width="100%" height={280}>
       <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
@@ -77,7 +79,7 @@ const SalesEvolutionChart = ({ data = [] }) => {
         <Area
           type="monotone"
           dataKey="revenue"
-          name="Revenu"
+          name={t('statistics_revenue')}
           stroke="#3b6ef8"
           strokeWidth={2.5}
           fill="url(#gradRevenue)"
@@ -88,7 +90,7 @@ const SalesEvolutionChart = ({ data = [] }) => {
         <Area
           type="monotone"
           dataKey="profit"
-          name="Profit"
+          name={t('statistics_profit')}
           stroke="#10b981"
           strokeWidth={2.5}
           fill="url(#gradProfit)"

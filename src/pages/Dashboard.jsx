@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { db, auth } from '../firebase/firebaseConfig';
 import { collection, onSnapshot, query } from 'firebase/firestore';
-import {
-  ShoppingCart, Package, BarChart2, FileDown,
-  TrendingUp, TrendingDown, Plus, ArrowRight
-} from 'lucide-react';
-import PacketsGrid from '../components/PacketsGrid';
+import { TrendingUp, TrendingDown, Plus, ArrowRight } from 'lucide-react';
 import '../styles/dashboard.css';
 
 /* ── Circular progress SVG ── */
@@ -72,13 +68,6 @@ const Dashboard = () => {
     return () => unsub();
   }, []);
 
-  const modules = [
-    { icon: ShoppingCart, name: t('sales'),             desc: t('module_sales_desc'),     color: '#3b6ef8', path: '/sales'      },
-    { icon: Package,      name: t('inventory'),         desc: t('module_inventory_desc'), color: '#10b981', path: '/inventory'  },
-    { icon: BarChart2,    name: t('module_charts'),     desc: t('module_charts_desc'),    color: '#f59e0b', path: '/statistics' },
-    { icon: FileDown,     name: t('module_exports'),    desc: t('module_exports_desc'),   color: '#ef4444', path: '/sales'      },
-  ];
-
   return (
     <div className="db-root">
       <div className="db-hero">
@@ -137,25 +126,7 @@ const Dashboard = () => {
           </div>
 
         </div>
-
-        {/* ── Modules ── */}
-        <div className="db-modules">
-          {modules.map((m, i) => (
-            <button key={i} className="db-module" onClick={() => navigate(m.path)}>
-              <div className="db-module-dot" style={{ background: m.color }} />
-              <div className="db-module-body">
-                <div className="db-module-name">{m.name}</div>
-                <div className="db-module-desc">{m.desc}</div>
-              </div>
-              <ArrowRight size={13} className="db-module-arrow" />
-            </button>
-          ))}
-        </div>
-
       </div>
-
-      {/* ── Packets ── */}
-      <PacketsGrid />
     </div>
   );
 };

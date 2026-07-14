@@ -1,12 +1,13 @@
 // src/components/charts/StockDistributionChart.jsx
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
-const LABELS = ['En stock', 'Stock faible', 'Rupture'];
 
 /* ── Custom Tooltip ── */
 const CustomTooltip = ({ active, payload }) => {
+  const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   const item = payload[0];
   return (
@@ -20,7 +21,7 @@ const CustomTooltip = ({ active, payload }) => {
     }}>
       <p style={{ color: item.payload.fill, fontSize: '0.82rem', fontWeight: 700 }}>{item.name}</p>
       <p style={{ color: '#fff', fontSize: '0.88rem', fontWeight: 700 }}>
-        {item.value} <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 400, fontSize: '0.75rem' }}>articles</span>
+        {item.value} <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 400, fontSize: '0.75rem' }}>{t('statistics_articles')}</span>
       </p>
       <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>
         {item.payload.percent}%
@@ -47,10 +48,10 @@ const CustomLegend = ({ payload }) => (
 );
 
 /* ── Center label ── */
-const CenterLabel = ({ cx, cy, total }) => (
+const CenterLabel = ({ cx, cy, total, label }) => (
   <>
     <text x={cx} y={cy - 8} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize={10} fontWeight={600} letterSpacing={1}>
-      TOTAL
+      {label}
     </text>
     <text x={cx} y={cy + 14} textAnchor="middle" fill="#fff" fontSize={22} fontWeight={700}>
       {total}
@@ -59,11 +60,18 @@ const CenterLabel = ({ cx, cy, total }) => (
 );
 
 const StockDistributionChart = ({ data = [] }) => {
+  const { t } = useTranslation();
   const total = data.reduce((s, d) => s + (d.value || 0), 0);
+  const labels = [
+    t('statistics_in_stock'),
+    t('statistics_low_stock'),
+    t('statistics_out_of_stock')
+  ];
 
   // Ajouter pourcentage à chaque item
-  const enriched = data.map(d => ({
+  const enriched = data.map((d, index) => ({
     ...d,
+    name: labels[index] || d.name,
     percent: total > 0 ? Math.round((d.value / total) * 100) : 0
   }));
 
@@ -93,7 +101,7 @@ const StockDistributionChart = ({ data = [] }) => {
             </Pie>
             <Tooltip content={<CustomTooltip />} />
             {total > 0 && (
-              <CenterLabel cx={100} cy={100} total={total} />
+              <CenterLabel cx={100} cy={100} total={total} label={t('statistics_total')} />
             )}
           </PieChart>
         </ResponsiveContainer>

@@ -1,5 +1,6 @@
 // src/components/charts/ProfitExpensesChart.jsx
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend
@@ -7,9 +8,14 @@ import {
 
 /* ── Custom Tooltip ── */
 const CustomTooltip = ({ active, payload, label }) => {
+  const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   const colors = { revenue: '#3b6ef8', expenses: '#ef4444', profit: '#10b981' };
-  const labels = { revenue: 'Revenu', expenses: 'Dépenses', profit: 'Profit' };
+  const labels = {
+    revenue: t('statistics_revenue'),
+    expenses: t('statistics_expenses'),
+    profit: t('statistics_profit')
+  };
   return (
     <div style={{
       background: 'rgba(10,18,38,0.97)',
@@ -40,7 +46,12 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 /* ── Custom Legend ── */
 const CustomLegend = ({ payload }) => {
-  const labels = { revenue: 'Revenu', expenses: 'Dépenses', profit: 'Profit' };
+  const { t } = useTranslation();
+  const labels = {
+    revenue: t('statistics_revenue'),
+    expenses: t('statistics_expenses'),
+    profit: t('statistics_profit')
+  };
   return (
     <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginTop: 10 }}>
       {payload?.map((p, i) => (
@@ -56,6 +67,7 @@ const CustomLegend = ({ payload }) => {
 };
 
 const ProfitExpensesChart = ({ data = [] }) => {
+  const { t } = useTranslation();
   return (
     <ResponsiveContainer width="100%" height={280}>
       <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
@@ -90,17 +102,17 @@ const ProfitExpensesChart = ({ data = [] }) => {
         <Tooltip content={<CustomTooltip />} />
         <Legend content={<CustomLegend />} />
 
-        <Area type="monotone" dataKey="revenue"  name="revenue"
+        <Area type="monotone" dataKey="revenue"  name={t('statistics_revenue')}
           stroke="#3b6ef8" strokeWidth={2} fill="url(#gradRev)"
           dot={false} activeDot={{ r: 4, fill: '#3b6ef8', strokeWidth: 0 }}
           animationDuration={1000} />
 
-        <Area type="monotone" dataKey="expenses" name="expenses"
+        <Area type="monotone" dataKey="expenses" name={t('statistics_expenses')}
           stroke="#ef4444" strokeWidth={2} fill="url(#gradExp)"
           dot={false} activeDot={{ r: 4, fill: '#ef4444', strokeWidth: 0 }}
           animationDuration={1200} />
 
-        <Area type="monotone" dataKey="profit"   name="profit"
+        <Area type="monotone" dataKey="profit"   name={t('statistics_profit')}
           stroke="#10b981" strokeWidth={2.5} fill="url(#gradProf)"
           dot={false} activeDot={{ r: 4, fill: '#10b981', strokeWidth: 0 }}
           animationDuration={1400} />

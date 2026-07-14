@@ -1,5 +1,6 @@
 // src/components/charts/TopArticlesChart.jsx
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Cell
@@ -9,6 +10,7 @@ const COLORS = ['#3b6ef8', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'
 
 /* ── Custom Tooltip ── */
 const CustomTooltip = ({ active, payload, label }) => {
+  const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   return (
     <div style={{
@@ -21,7 +23,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     }}>
       <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem', marginBottom: 4 }}>{label}</p>
       <p style={{ color: '#fff', fontSize: '0.88rem', fontWeight: 700 }}>
-        {payload[0]?.value} <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 400 }}>vendus</span>
+        {payload[0]?.value} <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 400 }}>{t('statistics_sold')}</span>
       </p>
     </div>
   );

@@ -1,7 +1,7 @@
 // src/pages/statistics.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TrendingUp, TrendingDown, ShoppingBag, Package, DollarSign, BarChart2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, ShoppingBag, DollarSign, BarChart2 } from 'lucide-react';
 import { db } from '../firebase/firebaseConfig';
 import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 
@@ -162,7 +162,7 @@ const Statistics = () => {
     return (
       <div className="stat-loading">
         <div className="stat-spinner" />
-        <p>Chargement des statistiques…</p>
+        <p>{t('statistics_loading')}</p>
       </div>
     );
   }
@@ -172,10 +172,10 @@ const Statistics = () => {
 
       {/* ── KPI Strip ── */}
       <div className="stat-kpi-strip">
-        <KpiCard icon={DollarSign}  label="Revenu total"  value={`${kpis.revenue.toLocaleString()} F`}   color="#3b6ef8" />
-        <KpiCard icon={TrendingUp}  label="Profit net"    value={`${kpis.profit.toLocaleString()} F`}    color="#10b981" />
-        <KpiCard icon={TrendingDown} label="Dépenses"     value={`${kpis.expenses.toLocaleString()} F`}  color="#ef4444" />
-        <KpiCard icon={ShoppingBag} label="Total ventes"  value={kpis.count}                             color="#f59e0b" />
+        <KpiCard icon={DollarSign}  label={t('statistics_revenue_total')}  value={`${kpis.revenue.toLocaleString()} F`}   color="#3b6ef8" />
+        <KpiCard icon={TrendingUp}  label={t('statistics_net_profit')}     value={`${kpis.profit.toLocaleString()} F`}    color="#10b981" />
+        <KpiCard icon={TrendingDown} label={t('statistics_expenses')}       value={`${kpis.expenses.toLocaleString()} F`}  color="#ef4444" />
+        <KpiCard icon={ShoppingBag} label={t('statistics_total_sales')}     value={kpis.count}                             color="#f59e0b" />
       </div>
 
       {/* ── Grid principale ── */}
@@ -184,41 +184,41 @@ const Statistics = () => {
         {/* 1. Évolution des ventes — pleine largeur */}
         <ChartCard
           className="stat-full"
-          title="Évolution des Ventes"
-          subtitle="Revenu & profit sur les 8 derniers mois"
-          badge="Temps réel"
+          title={t('statistics_sales_evolution')}
+          subtitle={t('statistics_sales_evolution_sub')}
+          badge={t('statistics_badge_realtime')}
         >
           {salesEvolutionData.length > 0
             ? <SalesEvolutionChart data={salesEvolutionData} />
-            : <EmptyState />}
+            : <EmptyState text={t('statistics_empty_data')} />}
         </ChartCard>
 
         {/* 2. Profit vs Dépenses — pleine largeur */}
         <ChartCard
           className="stat-full"
-          title="Profit vs Dépenses"
-          subtitle="Analyse financière mensuelle"
-          badge="Mensuel"
+          title={t('statistics_profit_vs_expenses')}
+          subtitle={t('statistics_profit_vs_expenses_sub')}
+          badge={t('statistics_badge_monthly')}
         >
           {profitExpensesData.length > 0
             ? <ProfitExpensesChart data={profitExpensesData} />
-            : <EmptyState />}
+            : <EmptyState text={t('statistics_empty_data')} />}
         </ChartCard>
 
         {/* 3. Top articles — moitié gauche */}
         <ChartCard
-          title="Top Articles Vendus"
-          subtitle="Par quantité vendue"
+          title={t('statistics_top_articles')}
+          subtitle={t('statistics_top_articles_sub')}
         >
           {topArticlesData.length > 0
             ? <TopArticlesChart data={topArticlesData} />
-            : <EmptyState />}
+            : <EmptyState text={t('statistics_empty_data')} />}
         </ChartCard>
 
         {/* 4. Distribution stock — moitié droite */}
         <ChartCard
-          title="Distribution du Stock"
-          subtitle="État actuel de l'inventaire"
+          title={t('statistics_stock_distribution')}
+          subtitle={t('statistics_stock_distribution_sub')}
         >
           <StockDistributionChart data={stockData} />
         </ChartCard>
@@ -229,14 +229,14 @@ const Statistics = () => {
 };
 
 /* ── Placeholder quand pas de données ── */
-const EmptyState = () => (
+const EmptyState = ({ text }) => (
   <div style={{
     height: 200, display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center', gap: 10,
   }}>
     <BarChart2 size={32} color="rgba(255,255,255,0.15)" />
     <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.85rem' }}>
-      Aucune donnée disponible
+      {text}
     </p>
   </div>
 );
