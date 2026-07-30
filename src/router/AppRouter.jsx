@@ -9,28 +9,35 @@ import RegisterPage from '../pages/RegisterPage';
 import Help from '../pages/Help';
 import Packets from '../pages/Packets';
 import { PacketProvider } from '../contexts/PacketContext';
+import { CategoryProvider, CategoryGate } from '../contexts/CategoryContext';
+import { CurrencyProvider } from '../contexts/CurrencyContext';
 
 const AppRouter = () => {
   return (
     <Router>
-      <PacketProvider>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/help" element={<Help />} />
-          <Route path="/register" element={<RegisterPage />} />
+      <CurrencyProvider>
+        <PacketProvider>
+          <CategoryProvider>
+            <CategoryGate />
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/help" element={<Help />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-          <Route path="/" element={<Layout />}>
-            {/* La page qui s'affiche par défaut sur http://localhost:5173/ */}
-            <Route index element={<Dashboard />} />
+              <Route path="/" element={<Layout />}>
+                {/* La page qui s'affiche par défaut sur http://localhost:5173/ */}
+                <Route index element={<Dashboard />} />
 
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="statistics" element={<Statistics />} />
-            <Route path="sales" element={<Sales />} />
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="packets" element={<Packets />} />
-          </Route>
-        </Routes>
-      </PacketProvider>
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="statistics" element={<Statistics />} />
+                <Route path="sales" element={<Sales />} />
+                <Route path="inventory" element={<Inventory />} />
+                <Route path="packets" element={<Packets />} />
+              </Route>
+            </Routes>
+          </CategoryProvider>
+        </PacketProvider>
+      </CurrencyProvider>
     </Router>
   );
 };

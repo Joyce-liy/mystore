@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Sun, Moon, UserCircle, Globe, Layers } from 'lucide-react';
+import { Bell, Sun, Moon, UserCircle, Globe, Layers, ArrowLeftRight } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { usePacket } from '../../contexts/PacketContext';
+import { useCategory } from '../../contexts/CategoryContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { useTranslation } from 'react-i18next';
 import { db, auth } from '../../firebase/firebaseConfig';
+import { signOut } from 'firebase/auth';
 import {
   collection, query, where, orderBy,
   onSnapshot, getDoc, doc, writeBatch
@@ -18,7 +21,9 @@ const Header = () => {
   const location                = useLocation();
   const navigate                = useNavigate();
   const { isDark, toggleTheme } = useTheme();
-  const { currentPacket }       = usePacket();
+  const { currentPacket, clearPacket } = usePacket();
+  const { clearCategory } = useCategory();
+  const { currency, toggleCurrency } = useCurrency();
 
   const [showSwitcher,  setShowSwitcher]  = useState(false);
   const [showNotifs,    setShowNotifs]    = useState(false);
@@ -112,8 +117,17 @@ const Header = () => {
   const currentPage = menuItems.find(item => item.path === location.pathname);
   const title       = currentPage ? currentPage.label : t('dashboard');
 
-  const handleLogout = () => {
-    if (window.confirm(t('logout_confirm'))) navigate('/login');
+  const handleLogout = async () => {
+    if (!window.confirm(t('logout_confirm'))) return;
+
+    try {
+      clearPacket();
+      clearCategory();
+      await signOut(auth);
+      navigate('/login', { replace: true });
+    } catch (err) {
+      console.error('Erreur lors de la déconnexion:', err);
+    }
   };
 
   const toggleLanguage = () => {
@@ -136,6 +150,15 @@ const Header = () => {
             <span className="lang-text">{currentLang.toUpperCase()}</span>
           </button>
         </div>
+        <button
+          className="lang-select-btn currency-toggle-btn"
+          onClick={toggleCurrency}
+          title={t('currency_toggle', { defaultValue: currency === 'XOF' ? 'Afficher en Euros' : 'Afficher en Francs CFA' })}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, visibility: 'visible', opacity: 1 }}
+        >
+          <ArrowLeftRight size={14} className="icon-globe" />
+          <span className="lang-text">{currency}</span>
+        </button>
         <button onClick={toggleTheme} className="action-btn theme-btn">
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>

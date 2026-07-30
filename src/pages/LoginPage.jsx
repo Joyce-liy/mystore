@@ -5,79 +5,82 @@ import { LogIn } from 'lucide-react';
 import { auth, db } from '../firebase/firebaseConfig';
 import {
   signInWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,        // ← FIX : popup au lieu de redirect
   GoogleAuthProvider,
   onAuthStateChanged
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { setupNotifications } from '../utils/fcm'; // Importation de la fonction FCM
+import { setupNotifications } from '../utils/fcm';
 import '../styles/login.css';
 
 const LoginPage = () => {
   const navigate  = useNavigate();
   const { t }     = useTranslation();
-  const [email, setEmail] = useState('');
+  const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error,    setError]    = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
+  // FIX : onAuthStateChanged séparé, avec un flag pour ignorer
+  // la navigation pendant qu'une connexion Google est en cours
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         navigate('/', { replace: true });
       }
     });
-
-    const checkRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (!result) return;
-
-        const ref = doc(db, 'users', result.user.uid);
-        if (!(await getDoc(ref)).exists()) {
-          await setDoc(ref, {
-            email: result.user.email,
-            role: 'vendeur',
-            createdAt: new Date()
-          });
-        }
-
-        await setupNotifications(result.user.uid);
-        navigate('/', { replace: true });
-      } catch (err) {
-        console.error('Google redirect result error:', err);
-        setError(err.message || t('login_google_error'));
-      }
-    };
-
-    checkRedirectResult();
     return () => unsubscribe();
-  }, [navigate, t]);
+  }, [navigate]);
+  // FIX : plus de getRedirectResult ici — il n'est plus nécessaire avec popup
 
+  // ── Connexion email/mot de passe ──
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       await setupNotifications(userCredential.user.uid);
-      navigate('/', { replace: true });
+      // navigate géré par onAuthStateChanged
     } catch (err) {
       console.error('Email login error:', err);
-      setError(err.message || t('login_error'));
+      setError(t('login_error'));
     } finally {
       setLoading(false);
     }
   };
 
+  // ── Connexion Google (popup) ──
   const handleGoogleLogin = async () => {
+    setError('');
+    setGoogleLoading(true);
     try {
-      await signInWithRedirect(auth, new GoogleAuthProvider());
-    } catch (err) { 
-      console.error('Google redirect error:', err);
-      setError(err.message || t('login_google_error')); 
+      const provider = new GoogleAuthProvider();
+      const result   = await signInWithPopup(auth, provider);
+
+      // Créer le doc Firestore si premier login
+      const ref     = doc(db, 'users', result.user.uid);
+      const snap    = await getDoc(ref);
+      if (!snap.exists()) {
+        await setDoc(ref, {
+          email:     result.user.email,
+          role:      'vendeur',
+          createdAt: new Date(),
+        });
+      }
+
+      await setupNotifications(result.user.uid);
+      // navigate géré par onAuthStateChanged
+    } catch (err) {
+      console.error('Google login error:', err);
+      // Ignorer l'erreur si l'utilisateur a fermé la popup
+      if (err.code !== 'auth/popup-closed-by-user' &&
+          err.code !== 'auth/cancelled-popup-request') {
+        setError(t('login_google_error'));
+      }
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -96,7 +99,7 @@ const LoginPage = () => {
               type="email"
               placeholder="exemple@mail.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               required
             />
           </div>
@@ -106,20 +109,33 @@ const LoginPage = () => {
               type="password"
               placeholder="••••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               required
             />
           </div>
           <button type="submit" className="btn-primary" disabled={loading}>
-            <LogIn size={16} /> {t('login_btn')}
+            <LogIn size={16} />
+            {loading ? '…' : t('login_btn')}
           </button>
         </form>
 
         <div className="divider">ou</div>
 
-        <button className="btn-google" onClick={handleGoogleLogin}>
-          <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" />
-          {t('login_google')}
+        <button
+          className="btn-google"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading}
+        >
+          {googleLoading
+            ? <span style={{ fontSize: '0.85rem' }}>Connexion…</span>
+            : <>
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
+                  alt="Google"
+                />
+                {t('login_google')}
+              </>
+          }
         </button>
 
         <p>{t('login_no_account')} <Link to="/register">{t('login_register')}</Link></p>

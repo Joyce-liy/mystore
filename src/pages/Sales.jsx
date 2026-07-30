@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Save, FileText, FileSpreadsheet, Camera, Tag, Ruler } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, FileSpreadsheet, Camera, Tag, Ruler, StickyNote, Hash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -13,6 +13,8 @@ import {
 import SavedSalesList from '../components/SavedSalesList';
 import { sendAppNotification } from '../utils/notifications';
 import { usePacket } from '../contexts/PacketContext';
+import { useCategory } from '../contexts/CategoryContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import '../styles/sales.css';
 
 const formatDate = (date) => {
@@ -33,9 +35,11 @@ const filterByPeriod = (sales, period) => {
   });
 };
 
+// ← AJOUT : indice dans emptyRow
 const emptyRow = (packetId = null) => ({
   id: Date.now(), designation: '', prixAchat: '', prixVente: '',
-  transport: '', marque: '', taille: '', photo: null, isUpdate: false, packetId
+  marque: '', taille: '', observation: '', indice: '',
+  photos: [], isUpdate: false, packetId
 });
 
 const downloadBlob = (blob, filename) => {
@@ -53,6 +57,9 @@ const Sales = () => {
   const { t, i18n } = useTranslation();
   const { currentPacket } = usePacket();
   const packetId = currentPacket?.id || null;
+  const { currentCategory } = useCategory();
+  const categoryId = currentCategory?.id || null;
+  const { formatAmount } = useCurrency();
   const [sales, setSales]               = useState([emptyRow(packetId)]);
   const [savedSales, setSavedSales]     = useState([]);
   const [userRole, setUserRole]         = useState('vendeur');
@@ -69,46 +76,60 @@ const Sales = () => {
     };
     fetchRole();
     const q = packetId
-      ? query(collection(db, 'sales'), where('packetId', '==', packetId))
+      ? (categoryId
+          ? query(collection(db, 'sales'), where('packetId', '==', packetId), where('categorieId', '==', categoryId))
+          : query(collection(db, 'sales'), where('packetId', '==', packetId)))
       : query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, snap => {
       let list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       if (packetId) {
         list.sort((a, b) => {
-          const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+          const da  = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
           const dbt = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
           return dbt - da;
         });
       }
       setSavedSales(list);
-    }, (error) => {
-      console.error('Sales snapshot error:', error);
-    });
+    }, (error) => { console.error('Sales snapshot error:', error); });
     return () => unsubscribe();
-  }, [packetId]);
-
-  const handleInputChange = (id, field, value) =>
-    setSales(sales.map(s => s.id === id ? { ...s, [field]: value } : s));
+  }, [packetId, categoryId]);
 
   useEffect(() => {
     setSales([emptyRow(packetId)]);
   }, [packetId]);
 
-  const handlePhotoChange = async (id, file) => {
-    if (!file) return;
+  const handleInputChange = (id, field, value) =>
+    setSales(sales.map(s => s.id === id ? { ...s, [field]: value } : s));
+
+  const handlePhotosChange = async (id, fileList) => {
+    const files = Array.from(fileList || []);
+    if (files.length === 0) return;
     try {
-      const compressed = await imageCompression(file, { maxSizeMB: 0.05, maxWidthOrHeight: 1920, useWebWorker: true });
-      const reader = new FileReader();
-      reader.onload = e => handleInputChange(id, 'photo', e.target.result);
-      reader.readAsDataURL(compressed);
+      const dataUrls = await Promise.all(files.map(async file => {
+        const compressed = await imageCompression(file, { maxSizeMB: 0.05, maxWidthOrHeight: 1920, useWebWorker: true });
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(compressed);
+        });
+      }));
+      setSales(prev => prev.map(s => s.id === id ? { ...s, photos: [...(s.photos || []), ...dataUrls] } : s));
     } catch (err) { console.error('Erreur compression photo:', err); }
+  };
+
+  const handleRemovePhoto = (id, index) => {
+    setSales(prev => prev.map(s => s.id === id ? { ...s, photos: (s.photos || []).filter((_, i) => i !== index) } : s));
   };
 
   const addSection    = () => { if (userRole === 'admin') setSales([...sales, emptyRow(packetId)]); };
   const removeSection = id => { if (sales.length > 1) setSales(sales.filter(s => s.id !== id)); };
 
   const handleEditRequest = sale => {
-    setSales([{ ...sale, isUpdate: true }]);
+    const photos = Array.isArray(sale.photos) && sale.photos.length > 0
+      ? sale.photos
+      : (sale.photo ? [sale.photo] : []);
+    setSales([{ ...sale, photos, isUpdate: true }]);
     setTimeout(() => { if (prixVenteRef.current) prixVenteRef.current.focus(); }, 100);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -120,11 +141,9 @@ const Sales = () => {
       for (const s of sales) {
         const v  = Number(s.prixVente) || 0;
         const a  = Number(s.prixAchat) || 0;
-        const tr = Number(s.transport) || 0;
-        const profit = v - a - tr;
+        const profit = v - a;
         const nom = s.designation || t('sales_no_name');
 
-        // ── CAS 1 : Mise à jour d'un article existant ──
         if (s.isUpdate) {
           const data = {
             prixVente: v, profit,
@@ -134,37 +153,33 @@ const Sales = () => {
           };
           if (userRole === 'admin') {
             Object.assign(data, {
-              designation: s.designation, prixAchat: a, transport: tr,
+              designation: s.designation, prixAchat: a,
               marque: s.marque || '', taille: s.taille || '',
-              ...(s.photo ? { photo: s.photo } : {})
+              categorieId: s.categorieId ?? categoryId ?? null,
+              categorie: s.categorie ?? currentCategory?.nom ?? null,
+              observation: s.observation || '',
+              indice: s.indice || '',           // ← AJOUT
+              photos: s.photos || []
             });
           }
           await updateDoc(doc(db, 'sales', s.id), data);
 
-          // NOTIFICATION : logique selon le rôle
           if (userRole === 'vendeur' && v > 0) {
-            // Le vendeur vient de confirmer une vente → notifie l'ADMIN
-            await sendAppNotification(
-              'admin',
-              t('notif_sale_title'),
-              t('notif_sale_body', { name: nom, price: v.toLocaleString() }),
-              'vente'
-            );
+            await sendAppNotification('admin', t('notif_sale_title'),
+              t('notif_sale_body', { name: nom, price: v.toLocaleString() }), 'vente');
           } else if (userRole === 'admin' && v > 0) {
-            // L'admin a modifié un article avec un prix de vente → notifie les VENDEURS
-            await sendAppNotification(
-              'vendeur',
-              t('notif_article_updated_title'),
-              t('notif_article_updated_body', { name: nom }),
-              'article'
-            );
+            await sendAppNotification('vendeur', t('notif_article_updated_title'),
+              t('notif_article_updated_body', { name: nom }), 'article');
           }
 
-        // ── CAS 2 : Ajout d'un nouvel article (admin uniquement) ──
         } else if (userRole === 'admin' && s.designation) {
           await addDoc(collection(db, 'sales'), {
-            designation: s.designation, prixAchat: a, prixVente: v, transport: tr, profit,
-            marque: s.marque || '', taille: s.taille || '', photo: s.photo || null,
+            designation: s.designation, prixAchat: a, prixVente: v, profit,
+            marque: s.marque || '', taille: s.taille || '', photos: s.photos || [],
+            observation: s.observation || '',
+            indice: s.indice || '',             // ← AJOUT
+            categorieId: categoryId,
+            categorie: currentCategory?.nom || null,
             status: v > 0 ? 'termine' : 'en_attente',
             vendeurId: auth.currentUser.uid,
             packetId: s.packetId ?? packetId ?? null,
@@ -172,21 +187,11 @@ const Sales = () => {
           });
 
           if (v > 0) {
-            // Article ajouté déjà vendu → notifie l'admin lui-même (historique)
-            await sendAppNotification(
-              'admin',
-              t('notif_sale_title'),
-              t('notif_sale_body', { name: nom, price: v.toLocaleString() }),
-              'vente'
-            );
+            await sendAppNotification('admin', t('notif_sale_title'),
+              t('notif_sale_body', { name: nom, price: v.toLocaleString() }), 'vente');
           } else {
-            // Article ajouté en attente → notifie les VENDEURS qu'un article est dispo
-            await sendAppNotification(
-              'vendeur',
-              t('notif_article_title'),
-              t('notif_article_body', { name: nom }),
-              'article'
-            );
+            await sendAppNotification('vendeur', t('notif_article_title'),
+              t('notif_article_body', { name: nom }), 'article');
           }
         }
       }
@@ -208,6 +213,18 @@ const Sales = () => {
 
   const filteredSales = filterByPeriod(savedSales, filterPeriod);
 
+  if (currentPacket && !currentCategory) {
+    return (
+      <div className="ms-root">
+        <div className="ms-main">
+          <div className="ms-content" style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <p>{t('sales_category_required', 'Choisissez une catégorie pour ce packet avant de saisir des articles.')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const exportToExcel = async () => {
     if (filteredSales.length === 0) { alert(t('sales_no_data')); return; }
     try {
@@ -216,19 +233,23 @@ const Sales = () => {
       ws.columns = [
         { header: t('sales_col_date'),   key: 'displayDate', width: 15 },
         { header: t('sales_col_item'),   key: 'designation', width: 25 },
+        { header: 'Indice',              key: 'indice',      width: 10 }, // ← AJOUT
         { header: t('sales_col_brand'),  key: 'marque',      width: 15 },
         { header: t('sales_col_size'),   key: 'taille',      width: 12 },
         { header: t('sales_col_buy'),    key: 'prixAchat',   width: 15 },
         { header: t('sales_col_sell'),   key: 'prixVente',   width: 15 },
         { header: t('sales_col_profit'), key: 'profit',      width: 15 },
+        { header: t('sales_observation', 'Observations'), key: 'observation', width: 30 },
       ];
       ws.addRows(filteredSales.map(s => ({
-        displayDate: s.dateFormatee || (s.createdAt?.toDate ? formatDate(s.createdAt.toDate()) : '-'),
-        designation: s.designation || t('sales_no_name'),
-        marque: s.marque || '', taille: s.taille || '',
-        prixAchat: Number(s.prixAchat) || 0,
-        prixVente: Number(s.prixVente) || 0,
-        profit:    Number(s.profit)    || 0
+        displayDate:  s.dateFormatee || (s.createdAt?.toDate ? formatDate(s.createdAt.toDate()) : '-'),
+        designation:  s.designation || t('sales_no_name'),
+        indice:       s.indice || '',
+        marque:       s.marque || '', taille: s.taille || '',
+        prixAchat:    Number(s.prixAchat) || 0,
+        prixVente:    Number(s.prixVente) || 0,
+        profit:       Number(s.profit)    || 0,
+        observation:  s.observation || ''
       })));
       const blob = new Blob([await wb.xlsx.writeBuffer()], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -244,12 +265,15 @@ const Sales = () => {
       pdfDoc.text(t('sales_report_title'), 40, 40);
       autoTable(pdfDoc, {
         head: [[
-          t('sales_col_date'), t('sales_col_item'), t('sales_col_brand'),
-          t('sales_col_size'), t('sales_col_buy'),  t('sales_col_sell'), t('sales_col_profit')
+          t('sales_col_date'), t('sales_col_item'), 'Indice',
+          t('sales_col_brand'), t('sales_col_size'),
+          t('sales_col_buy'), t('sales_col_sell'), t('sales_col_profit')
         ]],
         body: filteredSales.map(s => [
           s.dateFormatee || (s.createdAt?.toDate ? formatDate(s.createdAt.toDate()) : '-'),
-          s.designation || t('sales_no_name'), s.marque || '—', s.taille || '—',
+          s.designation || t('sales_no_name'),
+          s.indice || '—',
+          s.marque || '—', s.taille || '—',
           `${(Number(s.prixAchat) || 0).toLocaleString()} F`,
           `${(Number(s.prixVente) || 0).toLocaleString()} F`,
           `${(Number(s.profit)    || 0).toLocaleString()} F`
@@ -276,7 +300,7 @@ const Sales = () => {
 
         <div className="ms-content">
           {sales.map((sale, i) => {
-            const liveProfit = (Number(sale.prixVente)||0) - (Number(sale.prixAchat)||0) - (Number(sale.transport)||0);
+            const liveProfit = (Number(sale.prixVente)||0) - (Number(sale.prixAchat)||0);
             return (
               <div key={sale.id} className={`ms-card ${sale.isUpdate ? 'update' : ''}`}>
                 <div className="ms-card-head">
@@ -292,21 +316,24 @@ const Sales = () => {
 
                 <div className="ms-card-body">
                   <div className="ms-photo-wrap">
-                    {sale.photo ? (
-                      <div className="ms-photo-preview">
-                        <img src={sale.photo} alt="article" />
-                        {userRole === 'admin' && (
-                          <button className="ms-photo-del" onClick={() => handleInputChange(sale.id, 'photo', null)}>✕</button>
-                        )}
-                      </div>
-                    ) : (
-                      <label htmlFor={`p-${sale.id}`} className="ms-photo-empty">
-                        <Camera size={22} /><span>{t('sales_photo')}</span>
-                      </label>
-                    )}
-                    <input id={`p-${sale.id}`} type="file" accept="image/*" className="ms-hidden"
+                    <div className="ms-photo-list">
+                      {(sale.photos || []).map((photo, idx) => (
+                        <div key={idx} className="ms-photo-thumb">
+                          <img src={photo} alt={`article-${idx}`} />
+                          {(userRole === 'admin' || sale.isUpdate) && (
+                            <button className="ms-photo-del" onClick={() => handleRemovePhoto(sale.id, idx)}>✕</button>
+                          )}
+                        </div>
+                      ))}
+                      {(userRole === 'admin' || sale.isUpdate) && (
+                        <label htmlFor={`p-${sale.id}`} className="ms-photo-add">
+                          <Camera size={18} /><span>{t('sales_photo')}</span>
+                        </label>
+                      )}
+                    </div>
+                    <input id={`p-${sale.id}`} type="file" accept="image/*" multiple className="ms-hidden"
                       disabled={userRole !== 'admin' && !sale.isUpdate}
-                      onChange={e => handlePhotoChange(sale.id, e.target.files[0])} />
+                      onChange={e => { handlePhotosChange(sale.id, e.target.files); e.target.value = ''; }} />
                   </div>
 
                   <div className="ms-grid">
@@ -316,6 +343,21 @@ const Sales = () => {
                         disabled={userRole !== 'admin' && !sale.isUpdate}
                         onChange={e => handleInputChange(sale.id, 'designation', e.target.value)} />
                     </div>
+
+                    {/* ── AJOUT : champ Indice (admin seulement) ── */}
+                    <div className="ms-field">
+                      <label><Hash size={11} /> Indice</label>
+                      <input
+                        type="text"
+                        value={sale.indice || ''}
+                        disabled={userRole !== 'admin'}
+                        maxLength={10}
+                        placeholder="Ex: ST, AB…"
+                        onChange={e => handleInputChange(sale.id, 'indice', e.target.value.toUpperCase())}
+                        style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}
+                      />
+                    </div>
+
                     <div className="ms-field">
                       <label><Tag size={11} /> {t('sales_brand')}</label>
                       <input type="text" value={sale.marque} disabled={userRole !== 'admin'}
@@ -337,15 +379,20 @@ const Sales = () => {
                         onChange={e => handleInputChange(sale.id, 'prixVente', e.target.value)} />
                     </div>
                     <div className="ms-field">
-                      <label>{t('sales_transport')}</label>
-                      <input type="number" value={sale.transport} disabled={userRole !== 'admin'}
-                        onChange={e => handleInputChange(sale.id, 'transport', e.target.value)} />
-                    </div>
-                    <div className="ms-field">
                       <label>{t('sales_profit')}</label>
                       <div className={`ms-profit-pill ${liveProfit < 0 ? 'neg' : 'pos'}`}>
-                        {liveProfit.toLocaleString()} F
+                        {formatAmount(liveProfit)}
                       </div>
+                    </div>
+                    <div className="ms-field col-2 ms-observation">
+                      <label><StickyNote size={12} /> {t('sales_observation', 'Observations')}</label>
+                      <textarea
+                        rows={2}
+                        value={sale.observation || ''}
+                        disabled={userRole !== 'admin'}
+                        placeholder={t('sales_observation_placeholder', 'Notes sur cet article (état, remarque, etc.)')}
+                        onChange={e => handleInputChange(sale.id, 'observation', e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { db, auth } from '../firebase/firebaseConfig';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { TrendingUp, TrendingDown, Plus, ArrowRight } from 'lucide-react';
+import { useCurrency } from '../contexts/CurrencyContext';
 import '../styles/dashboard.css';
 
 /* ── Circular progress SVG ── */
@@ -33,8 +34,9 @@ const CircleProgress = ({ value = 87, label = 'Stock OK', size = 96, stroke = 6 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { t }    = useTranslation();
+  const { formatAmount } = useCurrency();
 
-  const [kpis,     setKpis]     = useState({ totalSales: 0, revenue: 0, profit: 0 });
+  const [kpis,     setKpis]     = useState({ totalSales: 0, revenue: 0, expenses: 0, profit: 0 });
   const [stockOk,  setStockOk]  = useState(87);
   const [userName, setUserName] = useState('');
   const [greeting, setGreeting] = useState('');
@@ -58,12 +60,13 @@ const Dashboard = () => {
     const q = query(collection(db, 'sales'));
     const unsub = onSnapshot(q, (snap) => {
       const all = snap.docs.map(d => d.data());
-      let rev = 0, prof = 0;
+      let rev = 0, prof = 0, exp = 0;
       all.forEach(s => {
         rev  += Number(s.prixVente) || 0;
         prof += Number(s.profit)   || 0;
+        exp  += (Number(s.prixAchat) || 0) + (Number(s.transport) || 0);
       });
-      setKpis({ totalSales: all.length, revenue: rev, profit: prof });
+      setKpis({ totalSales: all.length, revenue: rev, expenses: exp, profit: prof });
     });
     return () => unsub();
   }, []);
@@ -111,14 +114,21 @@ const Dashboard = () => {
               <div className="db-mini-kpi">
                 <TrendingUp size={14} color="#10b981" />
                 <div>
-                  <div className="db-mini-val">{kpis.revenue.toLocaleString()} F</div>
+                  <div className="db-mini-val">{formatAmount(kpis.revenue)}</div>
                   <div className="db-mini-lbl">{t('kpi_revenue')}</div>
                 </div>
               </div>
               <div className="db-mini-kpi">
                 <TrendingDown size={14} color="#ef4444" />
                 <div>
-                  <div className="db-mini-val">{kpis.profit.toLocaleString()} F</div>
+                  <div className="db-mini-val">{formatAmount(kpis.expenses)}</div>
+                  <div className="db-mini-lbl">{t('kpi_expenses')}</div>
+                </div>
+              </div>
+              <div className="db-mini-kpi">
+                <TrendingDown size={14} color="#ef4444" />
+                <div>
+                  <div className="db-mini-val">{formatAmount(kpis.profit)}</div>
                   <div className="db-mini-lbl">{t('kpi_profit')}</div>
                 </div>
               </div>

@@ -169,6 +169,186 @@
   padding: 1.1rem 1rem 1rem;
 }
 
+/* ══════════════════════════════════════
+   SECTION CATÉGORIE — design moderne
+══════════════════════════════════════ */
+
+/* ── Filtre : chips segmentées au lieu d'un <select> brut ── */
+.stat-category-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 0.65rem 0.85rem;
+  box-shadow: var(--shadow-xs);
+}
+
+.stat-category-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  padding-right: 4px;
+  border-right: 1px solid var(--border);
+  margin-right: 2px;
+}
+
+.stat-category-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.stat-category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.stat-category-chip:hover {
+  border-color: rgba(59,110,248,0.35);
+  color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+.stat-category-chip.active {
+  background: #3b6ef8;
+  border-color: #3b6ef8;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59,110,248,0.32);
+}
+
+.stat-category-chip .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Liste de répartition : lignes avec barre proportionnelle ── */
+.stat-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-category-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 100px 100px;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 8px;
+  border-radius: var(--r-md);
+  transition: background 0.15s;
+}
+
+.stat-category-row:hover { background: var(--bg-subtle); }
+
+.stat-category-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  min-width: 0;
+}
+
+.stat-category-name .dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stat-category-name .count-badge {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 1px 7px;
+  flex-shrink: 0;
+}
+
+.stat-category-bar-track {
+  position: relative;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--bg-subtle);
+  overflow: hidden;
+}
+
+.stat-category-bar-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #3b6ef8, #6f9bff);
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+.stat-category-revenue {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-heading);
+  text-align: right;
+}
+
+.stat-category-profit {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-align: right;
+}
+.stat-category-profit.pos { color: #10b981; }
+.stat-category-profit.neg { color: #ef4444; }
+
+.stat-category-header-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 100px 100px;
+  gap: 14px;
+  padding: 0 8px 8px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.stat-category-header-row span:not(:first-child) { text-align: right; }
+.stat-category-header-row span:nth-child(2) { text-align: left; }
+
+@media (max-width: 640px) {
+  .stat-category-row,
+  .stat-category-header-row {
+    grid-template-columns: 110px 1fr 70px 70px;
+    gap: 8px;
+  }
+  .stat-category-filter-label { border-right: none; padding-right: 0; margin-right: 0; width: 100%; }
+  .stat-category-filter { flex-direction: column; align-items: flex-start; }
+}
+
 /* ══ DARK THEME OVERRIDES ══
    Quand [data-theme="dark"] est actif, les charts sont déjà
    sombres de par leur design ; on ajuste juste les cartes.

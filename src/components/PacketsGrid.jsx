@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package } from 'lucide-react';
+import { Package, Tag, FileText, Truck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { db } from '../firebase/firebaseConfig';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { usePacket } from '../contexts/PacketContext';
+import { useCategory } from '../contexts/CategoryContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import PacketOrphanAssignModal from '../pages/PacketOrphanAssignModal';
 import '../styles/packets.css';
 
 const PacketsGrid = () => {
   const { t } = useTranslation();
   const { currentPacket, selectPacket } = usePacket();
+  const { currentCategory, clearCategory, selectCategory } = useCategory();
+  const { formatAmount } = useCurrency();
   const [packets, setPackets] = useState([]);
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,9 +36,12 @@ const PacketsGrid = () => {
     const map = {};
     sales.forEach(s => {
       if (!s.packetId) return;
-      if (!map[s.packetId]) map[s.packetId] = { count: 0, valeur: 0 };
+      if (!map[s.packetId]) map[s.packetId] = { count: 0, valeur: 0, categories: {} };
       map[s.packetId].count += 1;
       map[s.packetId].valeur += Number(s.prixAchat) || 0;
+      if (s.categorie) {
+        map[s.packetId].categories[s.categorie] = (map[s.packetId].categories[s.categorie] || 0) + 1;
+      }
     });
     return map;
   }, [sales]);
@@ -47,6 +54,16 @@ const PacketsGrid = () => {
     <div className="packets-section">
       <div className="packets-header">
         <h2>{t('packets_title')}</h2>
+        {currentPacket && currentCategory && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+            <span style={{ fontSize: '0.85rem', opacity: 0.75 }}>
+              {t('category_active_label', { name: currentCategory.nom, defaultValue: `Catégorie active : ${currentCategory.nom}` })}
+            </span>
+            <button className="packet-btn-ghost" style={{ padding: '2px 10px', fontSize: '0.8rem' }} onClick={clearCategory}>
+              {t('category_change', 'Changer')}
+            </button>
+          </div>
+        )}
       </div>
 
       {orphanCount > 0 && (
@@ -62,6 +79,7 @@ const PacketsGrid = () => {
       )}
 
       <div className="packets-grid">
+        {/* ── Vue globale ── */}
         <div
           className={`packet-card packet-card-global ${!currentPacket ? 'selected' : ''}`}
           onClick={() => selectPacket(null)}
@@ -71,22 +89,81 @@ const PacketsGrid = () => {
           <p className="packet-card-date">{t('packets_global_view_sub')}</p>
         </div>
 
+        {/* ── Cards packets ── */}
         {packets.map(p => {
-          const stat = statsByPacket[p.id] || { count: 0, valeur: 0 };
+          const stat = statsByPacket[p.id] || { count: 0, valeur: 0, categories: {} };
           const isActive = currentPacket?.id === p.id;
+          const topCats = Object.entries(stat.categories).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
           return (
             <div
               key={p.id}
               className={`packet-card ${isActive ? 'selected' : ''}`}
               onClick={() => selectPacket(p)}
             >
+              {/* Barre de couleur en haut si actif */}
+              {isActive && <div className="packet-card-active-bar" />}
+
               <div className="packet-card-icon"><Package size={20} /></div>
               <h3>{p.nom}</h3>
               <p className="packet-card-date">{p.dateArrivage || '-'}</p>
+
+              {/* ── OBSERVATION ── uniquement si elle existe */}
+              {p.observation && (
+                <div className="packet-card-observation">
+                  <div className="pco-label">
+                    <FileText size={11} />
+                    <span>{t('packets_observation', 'Observation')}</span>
+                  </div>
+                  <p className="pco-text">{p.observation}</p>
+                </div>
+              )}
+
               <div className="packet-card-stats">
                 <span>{t('packets_card_articles', { count: stat.count })}</span>
                 <span>{stat.valeur.toLocaleString()} F</span>
               </div>
+
+              {p.transportCost != null && p.transportCost !== '' && (
+                <div
+                  className="packet-card-transport"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    fontSize: '0.75rem', color: 'var(--text-muted, #64748b)',
+                    marginTop: 4
+                  }}
+                >
+                  <Truck size={12} />
+                  <span>{t('packets_transport_cost', 'Transport')} : {formatAmount(p.transportCost)}</span>
+                </div>
+              )}
+
+              {topCats.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                  {topCats.map(([cat, n]) => {
+                    const isCurrentCat = isActive && currentCategory?.nom === cat;
+                    return (
+                      <span
+                        key={cat}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          fontSize: '0.72rem', padding: '2px 8px', borderRadius: 999,
+                          background: isCurrentCat ? '#3b6ef8' : 'rgba(0,0,0,0.06)',
+                          color: isCurrentCat ? '#fff' : 'inherit',
+                          cursor: isActive ? 'pointer' : 'default'
+                        }}
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (isActive) selectCategory(cat);
+                        }}
+                        title={isActive ? t('category_switch_to', { name: cat, defaultValue: `Passer à "${cat}"` }) : cat}
+                      >
+                        <Tag size={10} /> {cat} <strong>{n}</strong>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
