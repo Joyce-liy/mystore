@@ -1,22 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, Tag, FileText, Truck } from 'lucide-react';
+import { Package, Tag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase/firebaseConfig';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { usePacket } from '../contexts/PacketContext';
 import { useCategory } from '../contexts/CategoryContext';
-import { useCurrency } from '../contexts/CurrencyContext';
 import PacketOrphanAssignModal from '../pages/PacketOrphanAssignModal';
 import '../styles/packets.css';
 
 const PacketsGrid = () => {
-  const { t } = useTranslation();
+  const { t }      = useTranslation();
+  const navigate   = useNavigate();
   const { currentPacket, selectPacket } = usePacket();
-  const { currentCategory, clearCategory, selectCategory } = useCategory();
-  const { formatAmount } = useCurrency();
-  const [packets, setPackets] = useState([]);
-  const [sales, setSales] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // ← AJOUT : resetCategory (distinct de clearCategory, voir CategoryContext.jsx)
+  const { currentCategory, clearCategory, selectCategory, resetCategory } = useCategory();
+  const [packets,    setPackets]    = useState([]);
+  const [sales,      setSales]      = useState([]);
+  const [loading,    setLoading]    = useState(true);
   const [showAssign, setShowAssign] = useState(false);
 
   useEffect(() => {
@@ -48,18 +49,33 @@ const PacketsGrid = () => {
 
   const orphanCount = useMemo(() => sales.filter(s => !s.packetId).length, [sales]);
 
+  // clic chip catégorie → sélectionne + navigue vers /sales
+  const handleCatChipClick = async (e, cat) => {
+    e.stopPropagation();
+    await selectCategory(cat);
+    navigate('/sales');
+  };
+
   if (loading) return <div className="loader">{t('packets_loading')}</div>;
 
   return (
     <div className="packets-section">
       <div className="packets-header">
         <h2>{t('packets_title')}</h2>
+
+        {/* Bandeau catégorie active — gère aussi l'état "Tous les articles" (isAll) */}
         {currentPacket && currentCategory && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
             <span style={{ fontSize: '0.85rem', opacity: 0.75 }}>
-              {t('category_active_label', { name: currentCategory.nom, defaultValue: `Catégorie active : ${currentCategory.nom}` })}
+              {currentCategory.isAll
+                ? t('category_all_active', 'Vue : Tous les articles')
+                : t('category_active_label', { name: currentCategory.nom, defaultValue: `Catégorie active : ${currentCategory.nom}` })}
             </span>
-            <button className="packet-btn-ghost" style={{ padding: '2px 10px', fontSize: '0.8rem' }} onClick={clearCategory}>
+            {/* ← CORRIGÉ : resetCategory (pas clearCategory) pour forcer
+                la réouverture de la modale — sinon cliquer "Changer" pendant
+                qu'on est déjà en mode "Tous les articles" ne ferait rien,
+                clearCategory remettant le même état isAll. */}
+            <button className="packet-btn-ghost" style={{ padding: '2px 10px', fontSize: '0.8rem' }} onClick={resetCategory}>
               {t('category_change', 'Changer')}
             </button>
           </div>
@@ -79,7 +95,6 @@ const PacketsGrid = () => {
       )}
 
       <div className="packets-grid">
-        {/* ── Vue globale ── */}
         <div
           className={`packet-card packet-card-global ${!currentPacket ? 'selected' : ''}`}
           onClick={() => selectPacket(null)}
@@ -89,11 +104,10 @@ const PacketsGrid = () => {
           <p className="packet-card-date">{t('packets_global_view_sub')}</p>
         </div>
 
-        {/* ── Cards packets ── */}
         {packets.map(p => {
-          const stat = statsByPacket[p.id] || { count: 0, valeur: 0, categories: {} };
+          const stat     = statsByPacket[p.id] || { count: 0, valeur: 0, categories: {} };
           const isActive = currentPacket?.id === p.id;
-          const topCats = Object.entries(stat.categories).sort((a, b) => b[1] - a[1]).slice(0, 3);
+          const topCats  = Object.entries(stat.categories).sort((a, b) => b[1] - a[1]).slice(0, 3);
 
           return (
             <div
@@ -101,47 +115,19 @@ const PacketsGrid = () => {
               className={`packet-card ${isActive ? 'selected' : ''}`}
               onClick={() => selectPacket(p)}
             >
-              {/* Barre de couleur en haut si actif */}
-              {isActive && <div className="packet-card-active-bar" />}
-
               <div className="packet-card-icon"><Package size={20} /></div>
               <h3>{p.nom}</h3>
               <p className="packet-card-date">{p.dateArrivage || '-'}</p>
-
-              {/* ── OBSERVATION ── uniquement si elle existe */}
-              {p.observation && (
-                <div className="packet-card-observation">
-                  <div className="pco-label">
-                    <FileText size={11} />
-                    <span>{t('packets_observation', 'Observation')}</span>
-                  </div>
-                  <p className="pco-text">{p.observation}</p>
-                </div>
-              )}
-
               <div className="packet-card-stats">
                 <span>{t('packets_card_articles', { count: stat.count })}</span>
                 <span>{stat.valeur.toLocaleString()} F</span>
               </div>
 
-              {p.transportCost != null && p.transportCost !== '' && (
-                <div
-                  className="packet-card-transport"
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 5,
-                    fontSize: '0.75rem', color: 'var(--text-muted, #64748b)',
-                    marginTop: 4
-                  }}
-                >
-                  <Truck size={12} />
-                  <span>{t('packets_transport_cost', 'Transport')} : {formatAmount(p.transportCost)}</span>
-                </div>
-              )}
-
+              {/* Chips catégories — clic navigue vers /sales filtré */}
               {topCats.length > 0 && (
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                   {topCats.map(([cat, n]) => {
-                    const isCurrentCat = isActive && currentCategory?.nom === cat;
+                    const isCurrentCat = isActive && !currentCategory?.isAll && currentCategory?.nom === cat;
                     return (
                       <span
                         key={cat}
@@ -150,13 +136,16 @@ const PacketsGrid = () => {
                           fontSize: '0.72rem', padding: '2px 8px', borderRadius: 999,
                           background: isCurrentCat ? '#3b6ef8' : 'rgba(0,0,0,0.06)',
                           color: isCurrentCat ? '#fff' : 'inherit',
-                          cursor: isActive ? 'pointer' : 'default'
+                          cursor: isActive ? 'pointer' : 'default',
+                          transition: 'background 0.12s',
                         }}
                         onClick={e => {
-                          e.stopPropagation();
-                          if (isActive) selectCategory(cat);
+                          if (isActive) handleCatChipClick(e, cat);
+                          else e.stopPropagation();
                         }}
-                        title={isActive ? t('category_switch_to', { name: cat, defaultValue: `Passer à "${cat}"` }) : cat}
+                        title={isActive
+                          ? t('category_switch_to', { name: cat, defaultValue: `Voir les articles "${cat}"` })
+                          : cat}
                       >
                         <Tag size={10} /> {cat} <strong>{n}</strong>
                       </span>

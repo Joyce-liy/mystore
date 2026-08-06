@@ -3,12 +3,14 @@ import { usePacket } from '../contexts/PacketContext';
 import { useCategory } from '../contexts/CategoryContext';
 import PacketCategoryModal from '../pages/PacketCategoryModal';
 
-// À monter UNE FOIS au niveau racine de l'app (dans App.jsx, à l'intérieur des
-// deux providers), pas à l'intérieur d'une page précise. Comme currentPacket
-// et currentCategory sont globaux (Context + localStorage), ce composant
-// détecte automatiquement le besoin de choisir une catégorie, peu importe
-// que le packet ait été choisi depuis PacketsGrid, PacketSwitcherModal, ou
-// n'importe quel autre point d'entrée futur.
+// Monté UNE FOIS dans App.jsx à l'intérieur des deux providers.
+// Détecte automatiquement quand un packet est actif sans catégorie
+// et affiche la modale de choix — qui navigue vers /sales après sélection.
+//
+// NOTE : `currentCategory` vaut soit null (pas encore décidé → modale),
+// soit un objet { nom, id, packetId } pour une catégorie précise,
+// soit un objet { isAll: true, ... } pour "Tous les articles".
+// Les deux derniers cas sont truthy, donc la modale ne s'affiche pas.
 const CategoryGate = () => {
   const { currentPacket } = usePacket();
   const { currentCategory } = useCategory();

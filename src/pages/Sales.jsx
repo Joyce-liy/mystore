@@ -35,9 +35,10 @@ const filterByPeriod = (sales, period) => {
   });
 };
 
-// ← AJOUT : indice dans emptyRow
+// ← AJOUT : indice + prixVenteMin dans emptyRow
 const emptyRow = (packetId = null) => ({
   id: Date.now(), designation: '', prixAchat: '', prixVente: '',
+  prixVenteMin: '',
   marque: '', taille: '', observation: '', indice: '',
   photos: [], isUpdate: false, packetId
 });
@@ -154,6 +155,7 @@ const Sales = () => {
           if (userRole === 'admin') {
             Object.assign(data, {
               designation: s.designation, prixAchat: a,
+              prixVenteMin: Number(s.prixVenteMin) || 0,   // ← AJOUT
               marque: s.marque || '', taille: s.taille || '',
               categorieId: s.categorieId ?? categoryId ?? null,
               categorie: s.categorie ?? currentCategory?.nom ?? null,
@@ -175,6 +177,7 @@ const Sales = () => {
         } else if (userRole === 'admin' && s.designation) {
           await addDoc(collection(db, 'sales'), {
             designation: s.designation, prixAchat: a, prixVente: v, profit,
+            prixVenteMin: Number(s.prixVenteMin) || 0,     // ← AJOUT
             marque: s.marque || '', taille: s.taille || '', photos: s.photos || [],
             observation: s.observation || '',
             indice: s.indice || '',             // ← AJOUT
@@ -373,10 +376,34 @@ const Sales = () => {
                       <input type="number" value={sale.prixAchat} disabled={userRole !== 'admin'}
                         onChange={e => handleInputChange(sale.id, 'prixAchat', e.target.value)} />
                     </div>
+                    {/* ── AJOUT : Prix de vente minimum (plancher), admin seulement ── */}
+                    <div className="ms-field">
+                      <label>{t('sales_min_price', 'Prix vente min')}</label>
+                      <input type="number" value={sale.prixVenteMin} disabled={userRole !== 'admin'}
+                        placeholder="0"
+                        onChange={e => handleInputChange(sale.id, 'prixVenteMin', e.target.value)} />
+                    </div>
                     <div className="ms-field">
                       <label>{t('sales_sell_price')}</label>
                       <input ref={prixVenteRef} type="number" value={sale.prixVente}
                         onChange={e => handleInputChange(sale.id, 'prixVente', e.target.value)} />
+                      {/* ← AJOUT : pastille d'avertissement si vente sous le plancher.
+                          Purement visuelle — n'empêche pas la sauvegarde. */}
+                      {Number(sale.prixVente) > 0 && Number(sale.prixVenteMin) > 0
+                        && Number(sale.prixVente) < Number(sale.prixVenteMin) && (
+                        <span
+                          className="ms-price-warning"
+                          title={t('sales_below_min_price', 'Vente sous le prix plancher fixé')}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            marginTop: 4, fontSize: 11, fontWeight: 600,
+                            color: '#ef4444', background: 'rgba(239,68,68,0.1)',
+                            padding: '2px 8px', borderRadius: 999, width: 'fit-content',
+                          }}
+                        >
+                          ⚠ {t('sales_below_min_price_short', 'Sous le plancher')}
+                        </span>
+                      )}
                     </div>
                     <div className="ms-field">
                       <label>{t('sales_profit')}</label>

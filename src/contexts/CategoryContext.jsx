@@ -32,6 +32,8 @@ export const CategoryProvider = ({ children }) => {
 
   // Si on change de packet (ou qu'on revient à la vue globale), la catégorie
   // active n'est conservée que si elle appartient bien au nouveau packet.
+  // → remise à null : c'est CE null (et lui seul) qui signifie "pas encore
+  //   décidé" et qui doit rouvrir la modale via CategoryGate.
   useEffect(() => {
     setCurrentCategoryState(prev => {
       if (!packetId) return null;
@@ -104,16 +106,36 @@ export const CategoryProvider = ({ children }) => {
       }
     }
 
-    const cat = { id, nom, packetId };
+    const cat = { id, nom, packetId, isAll: false };
     setCurrentCategoryState(cat);
     return cat;
   };
 
-  const clearCategory = () => setCurrentCategoryState(null);
+  // "Tous les articles" : on met un OBJET truthy avec isAll=true, PAS null.
+  // Pourquoi : CategoryGate affiche la modale dès que
+  // `currentPacket && !currentCategory` est vrai. Si on mettait null ici,
+  // la modale se rouvrirait instantanément après le clic sur
+  // "Tous les articles", empêchant toute navigation visible vers /sales.
+  // Ce marqueur permet à Sales.jsx de savoir qu'il ne doit appliquer AUCUN
+  // filtre de catégorie, tout en restant "décidé" pour le Gate.
+  const clearCategory = () => {
+    if (!packetId) { setCurrentCategoryState(null); return; }
+    setCurrentCategoryState({ id: null, nom: null, packetId, isAll: true });
+  };
+
+  // resetCategory : remet VRAIMENT à null, pour forcer la réouverture de la
+  // modale de choix (ex: bouton "Changer" dans PacketsGrid). Ne pas
+  // confondre avec clearCategory().
+  const resetCategory = () => setCurrentCategoryState(null);
 
   return (
     <CategoryContext.Provider value={{
-      currentCategory, selectCategory, clearCategory, availableCategories, loading
+      currentCategory,
+      selectCategory,
+      clearCategory,
+      resetCategory,
+      availableCategories,
+      loading
     }}>
       {children}
     </CategoryContext.Provider>
