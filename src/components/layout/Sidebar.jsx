@@ -29,7 +29,15 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
   return (
     <aside className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}>
       <div className="sidebar-header">
-        {isExpanded && <span className="logo-text">MYSTORE</span>}
+        {/* ← REMPLACÉ : texte "MYSTORE" → logo (public/logo-header.png, fond transparent).
+            Visible aussi en mode replié (juste plus petit), contrairement au texte
+            qui disparaissait complètement avant. */}
+        <img
+          src="/logo-header.png"
+          alt="MyStore"
+          className="sidebar-logo"
+          style={{ height: isExpanded ? 50 : 42, width: 'auto', transition: 'height 0.15s' }}
+        />
         <button onClick={() => setIsExpanded(!isExpanded)} className="toggle-btn">
           {isExpanded ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>

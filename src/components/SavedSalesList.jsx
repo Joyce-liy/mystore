@@ -58,6 +58,7 @@ const SavedSalesList = ({ savedSales, onDelete, onEdit }) => {
               <th>{t('sales_brand')}</th>
               <th>{t('sales_size')}</th>
               <th>{t('sales_buy_price')}</th>
+              <th>{t('sales_min_price', 'Prix min')}</th>
               <th>{t('sales_sell_price')}</th>
               <th>{t('sales_transport')}</th>
               <th>{t('sales_profit')}</th>
@@ -95,7 +96,31 @@ const SavedSalesList = ({ savedSales, onDelete, onEdit }) => {
                 <td>{sale.marque || '-'}</td>
                 <td>{sale.taille || '-'}</td>
                 <td>{formatAmount(sale.prixAchat)}</td>
-                <td>{formatAmount(sale.prixVente || 0)}</td>
+                <td style={{ color: sale.prixVenteMin > 0 ? 'inherit' : '#94a3b8' }}>
+                  {sale.prixVenteMin > 0 ? formatAmount(sale.prixVenteMin) : '-'}
+                </td>
+                <td>
+                  <span style={
+                    sale.prixVenteMin > 0 && sale.prixVente > 0 && sale.prixVente < sale.prixVenteMin
+                      ? { color: '#ef4444', fontWeight: 700 }
+                      : undefined
+                  }>
+                    {formatAmount(sale.prixVente || 0)}
+                  </span>
+                  {sale.prixVenteMin > 0 && sale.prixVente > 0 && sale.prixVente < sale.prixVenteMin && (
+                    <span
+                      title={t('sales_below_min_price', 'Vente sous le prix plancher fixé')}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', marginLeft: 6,
+                        fontSize: 10, fontWeight: 700, color: '#ef4444',
+                        background: 'rgba(239,68,68,0.1)', padding: '1px 6px',
+                        borderRadius: 999, whiteSpace: 'nowrap',
+                      }}
+                    >
+                      ⚠
+                    </span>
+                  )}
+                </td>
                 <td>{formatAmount(sale.transport || 0)}</td>
                 <td className={`profit-cell ${sale.profit > 0 ? 'text-success' : 'text-danger'}`}>
                   {formatAmount(sale.profit || 0)}

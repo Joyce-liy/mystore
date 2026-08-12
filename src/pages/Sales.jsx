@@ -264,7 +264,14 @@ const Sales = () => {
   const exportToPDF = () => {
     if (filteredSales.length === 0) { alert(t('sales_no_data')); return; }
     try {
-      const pdfDoc = new jsPDF('p', 'pt', 'a4');
+      // .toLocaleString() sans locale utilise une espace fine insécable
+      // (U+202F) comme séparateur de milliers — la police standard de jsPDF
+      // n'a pas ce glyphe, d'où les "6 /000" et retours à la ligne au milieu
+      // des nombres. On formate nous-mêmes avec un espace ASCII normal.
+      const fmt = (n) => `${Math.round(Number(n) || 0).toLocaleString('en-US').replace(/,/g, ' ')} F`;
+
+      // Paysage au lieu de portrait : plus de largeur pour les 8 colonnes.
+      const pdfDoc = new jsPDF('l', 'pt', 'a4');
       pdfDoc.text(t('sales_report_title'), 40, 40);
       autoTable(pdfDoc, {
         head: [[
@@ -277,11 +284,25 @@ const Sales = () => {
           s.designation || t('sales_no_name'),
           s.indice || '—',
           s.marque || '—', s.taille || '—',
-          `${(Number(s.prixAchat) || 0).toLocaleString()} F`,
-          `${(Number(s.prixVente) || 0).toLocaleString()} F`,
-          `${(Number(s.profit)    || 0).toLocaleString()} F`
+          fmt(s.prixAchat),
+          fmt(s.prixVente),
+          fmt(s.profit)
         ]),
-        startY: 60, headStyles: { fillColor: [15, 23, 42] }
+        startY: 60,
+        styles: { fontSize: 9, cellPadding: 5, overflow: 'linebreak' },
+        headStyles: { fillColor: [15, 23, 42] },
+        // Largeurs fixes + alignement à droite pour les montants, pour que
+        // les nombres ne soient jamais coupés en plein milieu.
+        columnStyles: {
+          0: { cellWidth: 60 },
+          1: { cellWidth: 180 },
+          2: { cellWidth: 50 },
+          3: { cellWidth: 90 },
+          4: { cellWidth: 50 },
+          5: { cellWidth: 70, halign: 'right' },
+          6: { cellWidth: 70, halign: 'right' },
+          7: { cellWidth: 70, halign: 'right' },
+        }
       });
       downloadBlob(pdfDoc.output('blob'), `Ventes_MyStore_${Date.now()}.pdf`);
     } catch (err) { console.error('Erreur PDF:', err); alert(`Erreur PDF: ${err.message}`); }
@@ -397,8 +418,7 @@ const Sales = () => {
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 4,
                             marginTop: 4, fontSize: 11, fontWeight: 600,
-                            color: '#ef4444', background: 'rgba(239,68,68,0.1)',
-                            padding: '2px 8px', borderRadius: 999, width: 'fit-content',
+                            color: '#ef4444', background: 'rgba(239,68,68,0.1)',                            padding: '2px 8px', borderRadius: 999, width: 'fit-content',
                           }}
                         >
                           ⚠ {t('sales_below_min_price_short', 'Sous le plancher')}

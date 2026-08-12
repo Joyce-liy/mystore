@@ -10,7 +10,7 @@ import SalesEvolutionChart  from '../components/charts/SalesEvolutionChart';
 import TopArticlesChart     from '../components/charts/TopArticlesChart';
 import StockDistributionChart from '../components/charts/StockDistributionChart';
 import ProfitExpensesChart  from '../components/charts/ProfitExpensesChart';
-import LostMarginChart      from '../components/charts/LostMarginChart'; // ← AJOUT
+import MarginVsFloorPieChart from '../components/charts/MarginVsFloorPieChart'; // ← REMPLACE LostMarginChart
 import { usePacket } from '../contexts/PacketContext';
 import { useCategory } from '../contexts/CategoryContext';
 import { useCurrency } from '../contexts/CurrencyContext';
@@ -173,27 +173,28 @@ const Statistics = () => {
     return Object.values(months).slice(-8); // 8 derniers mois
   }, [displaySales]);
 
-  // ── 1bis. Marge perdue par mois sur les ventes sous le prix plancher ──
-  // Une vente compte seulement si un plancher a été fixé (prixVenteMin > 0),
-  // qu'elle est finalisée (prixVente > 0), et que prixVente < prixVenteMin.
-  // La perte = (prixVenteMin - prixVente), c'est-à-dire la marge en moins
-  // par rapport à ce que l'admin avait fixé comme prix plancher.
-  const lostMarginData = useMemo(() => {
-    const months = {};
-    const MONTH_NAMES = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  // ── 1bis. Marge gagnée vs marge perdue par rapport au prix plancher ──
+  // Ne compte que les articles où un plancher (prixVenteMin > 0) a été
+  // fixé et où la vente est finalisée (prixVente > 0) :
+  //   - "gagnée" = ce qui dépasse le plancher (prixVente - prixVenteMin), si >= 0
+  //   - "perdue"  = ce qui manque par rapport au plancher (prixVenteMin - prixVente), si vente < plancher
+  // Vue globale (pas mensuelle) : un pie chart n'a pas de dimension temporelle.
+  const marginVsFloorData = useMemo(() => {
+    let gagnee = 0, perdue = 0, countGagnee = 0, countPerdue = 0;
     displaySales.forEach(s => {
       const min = Number(s.prixVenteMin) || 0;
       const vente = Number(s.prixVente) || 0;
-      if (min <= 0 || vente <= 0 || vente >= min) return;
-      if (!s.createdAt) return;
-      const date = s.createdAt.toDate ? s.createdAt.toDate() : new Date(s.createdAt);
-      const key  = `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
-      if (!months[key]) months[key] = { label: key, perte: 0, count: 0 };
-      months[key].perte += (min - vente);
-      months[key].count += 1;
+      if (min <= 0 || vente <= 0) return;
+      if (vente >= min) { gagnee += (vente - min); countGagnee += 1; }
+      else { perdue += (min - vente); countPerdue += 1; }
     });
-    return Object.values(months).slice(-8);
-  }, [displaySales]);
+    return [
+      { name: t('statistics_margin_gained', 'Marge gagnée'), value: gagnee, count: countGagnee, color: '#10b981' },
+      { name: t('statistics_margin_lost', 'Marge perdue'),   value: perdue, count: countPerdue, color: '#ef4444' },
+    ];
+  }, [displaySales, t]);
+
+  const hasMarginVsFloorData = marginVsFloorData.some(d => d.value > 0);
 
   // ── 2. Top articles par quantité vendue ──
   const topArticlesData = useMemo(() => {
@@ -320,15 +321,14 @@ const Statistics = () => {
             : <EmptyState text={t('statistics_empty_data')} />}
         </ChartCard>
 
-        {/* 2bis. Marge perdue sous le prix plancher — pleine largeur */}
+        {/* 2bis. Marge gagnée vs perdue par rapport au prix plancher */}
         <ChartCard
           className="stat-full"
-          title={t('statistics_lost_margin', 'Marge perdue sous le prix plancher')}
-          subtitle={t('statistics_lost_margin_sub', 'Ventes conclues en dessous du prix minimum fixé par article')}
-          badge={t('statistics_badge_monthly')}
+          title={t('statistics_margin_vs_floor', 'Marge gagnée vs perdue (prix plancher)')}
+          subtitle={t('statistics_margin_vs_floor_sub', 'Sur les articles avec un prix plancher fixé et une vente finalisée')}
         >
-          {lostMarginData.length > 0
-            ? <LostMarginChart data={lostMarginData} />
+          {hasMarginVsFloorData
+            ? <MarginVsFloorPieChart data={marginVsFloorData} />
             : <EmptyState text={t('statistics_empty_data')} />}
         </ChartCard>
 
