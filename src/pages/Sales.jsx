@@ -54,6 +54,14 @@ const downloadBlob = (blob, filename) => {
   reader.readAsDataURL(blob);
 };
 
+// ← AJOUT : couleurs des alertes de prix
+// danger  (rouge)  : prix de vente < prix d'achat
+// warning (jaune)  : prix de vente < prix de vente minimum
+const PRICE_ALERT = {
+  danger:  { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+  warning: { color: '#ca8a04', bg: 'rgba(234,179,8,0.16)' },
+};
+
 const Sales = () => {
   const { t, i18n } = useTranslation();
   const { currentPacket } = usePacket();
@@ -324,7 +332,17 @@ const Sales = () => {
 
         <div className="ms-content">
           {sales.map((sale, i) => {
-            const liveProfit = (Number(sale.prixVente)||0) - (Number(sale.prixAchat)||0);
+            // ← AJOUT : état du prix (rouge = sous le prix d'achat, jaune = sous le prix minimum)
+            const vente    = Number(sale.prixVente)    || 0;
+            const achat    = Number(sale.prixAchat)    || 0;
+            const minVente = Number(sale.prixVenteMin) || 0;
+            const liveProfit = vente - achat;
+
+            const belowCost  = vente > 0 && achat > 0 && vente < achat;
+            const belowMin   = !belowCost && vente > 0 && minVente > 0 && vente < minVente;
+            const priceState = belowCost ? 'danger' : belowMin ? 'warning' : null;
+            const priceAlert = priceState ? PRICE_ALERT[priceState] : null;
+
             return (
               <div key={sale.id} className={`ms-card ${sale.isUpdate ? 'update' : ''}`}>
                 <div className="ms-card-head">
@@ -408,26 +426,35 @@ const Sales = () => {
                       <label>{t('sales_sell_price')}</label>
                       <input ref={prixVenteRef} type="number" value={sale.prixVente}
                         onChange={e => handleInputChange(sale.id, 'prixVente', e.target.value)} />
-                      {/* ← AJOUT : pastille d'avertissement si vente sous le plancher.
-                          Purement visuelle — n'empêche pas la sauvegarde. */}
-                      {Number(sale.prixVente) > 0 && Number(sale.prixVenteMin) > 0
-                        && Number(sale.prixVente) < Number(sale.prixVenteMin) && (
+                      {/* ← Avertissement de prix : ROUGE si vente < prix d'achat,
+                          JAUNE si vente < prix de vente minimum.
+                          Purement visuel — n'empêche pas la sauvegarde. */}
+                      {priceAlert && (
                         <span
                           className="ms-price-warning"
-                          title={t('sales_below_min_price', 'Vente sous le prix plancher fixé')}
+                          title={belowCost
+                            ? t('sales_below_cost', "Vente sous le prix d'achat (perte)")
+                            : t('sales_below_min_price', 'Vente sous le prix plancher fixé')}
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 4,
                             marginTop: 4, fontSize: 11, fontWeight: 600,
-                            color: '#ef4444', background: 'rgba(239,68,68,0.1)',                            padding: '2px 8px', borderRadius: 999, width: 'fit-content',
+                            color: priceAlert.color, background: priceAlert.bg,
+                            padding: '2px 8px', borderRadius: 999, width: 'fit-content',
                           }}
                         >
-                          ⚠ {t('sales_below_min_price_short', 'Sous le plancher')}
+                          ⚠ {belowCost
+                            ? t('sales_below_cost_short', "Sous le prix d'achat")
+                            : t('sales_below_min_price_short', 'Sous le plancher')}
                         </span>
                       )}
                     </div>
                     <div className="ms-field">
                       <label>{t('sales_profit')}</label>
-                      <div className={`ms-profit-pill ${liveProfit < 0 ? 'neg' : 'pos'}`}>
+                      {/* ← La couleur du profit suit le même état (rouge / jaune) */}
+                      <div
+                        className={`ms-profit-pill ${liveProfit < 0 ? 'neg' : 'pos'}`}
+                        style={priceAlert ? { color: priceAlert.color, background: priceAlert.bg, borderColor: priceAlert.color } : undefined}
+                      >
                         {formatAmount(liveProfit)}
                       </div>
                     </div>
